@@ -27,7 +27,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.example.app</string>
+				<string>es.um.inf.oidcfed</string>
 			</array>
 		</dict>
 	</array>
