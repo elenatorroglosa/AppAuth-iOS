@@ -221,6 +221,83 @@ NS_ASSUME_NONNULL_BEGIN
       });
       return;
     }
+    // data is the discovery metadata -- emtg
+
+     //emtg: modification to print data content
+     //NSString *strData = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+     //NSLog(@"EMTG: %@",strData);
+
+     //NSData *returnedData = ...JSON data, probably from a web request...
+     if (data) {
+         if(NSClassFromString(@"NSJSONSerialization"))
+         {
+             NSError *jsonError = nil;
+             id objectDiscoveryDocument = [NSJSONSerialization
+                                           JSONObjectWithData:data
+                                           options:0
+                                           error:&jsonError];
+
+             if(jsonError) { /* JSON was malformed, act appropriately here */ }
+
+             if([objectDiscoveryDocument isKindOfClass:[NSDictionary class]])
+             {
+                 NSDictionary *discoveryResults = objectDiscoveryDocument;
+                 NSString *strDiscoveryData = discoveryResults.debugDescription;
+                 NSLog(@"EMTG - discovery document: \n%@", strDiscoveryData);
+
+                 //NSLog(@"EMTG - Documents directory: %@", [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsDirectory error:&error]);
+                 //NSBundle *mainBundle = [NSBundle mainBundle];
+                 //NSString *mainBundleIdentifier = [mainBundle bundleIdentifier];
+                 //NSLog(@"EMTG - mainBundleIdentifier: \n%@",mainBundleIdentifier);
+
+                 //NSLog(@"EMTG - resource Path: \n%@",mainBundle.resourcePath);
+                 NSString *rootKeysPath = [[NSBundle mainBundle] pathForResource:@"rootkeys" ofType:@"json"];
+                 if (!rootKeysPath) {
+                     NSLog(@"EMTG - error formando el path");
+                 } else {
+                     NSLog(@"EMTG - path: %@",rootKeysPath);
+
+                     NSData *jsonRootKeysData = [NSData dataWithContentsOfFile:rootKeysPath];
+                     id objectRootKeysDocument = [NSJSONSerialization
+                                                   JSONObjectWithData:jsonRootKeysData
+                                                   options:0
+                                                   error:&jsonError];
+
+                     if(jsonError) { /* JSON was malformed, act appropriately here */ }
+
+                     if(![objectRootKeysDocument isKindOfClass:[NSDictionary class]])
+                     {
+                         //TODO: process error
+                     }
+                     NSDictionary *dictionaryRootKeys = objectRootKeysDocument;
+
+                     NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
+                     NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
+
+                     // TODO getFederatedgetFederatedConfiguration
+
+
+                 }
+             }
+             else
+             {
+                 /* there's no guarantee that the outermost object in a JSON
+                  packet will be a dictionary; if we get here then it wasn't,
+                  so 'object' shouldn't be treated as an NSDictionary; probably
+                  you need to report a suitable error condition */
+             }
+         }
+         else
+         {
+             // the user is using iOS 4; we'll need to use a third-party solution.
+             // If you don't intend to support iOS 4 then get rid of this entire
+             // conditional and just jump straight to
+             // NSError *error = nil;
+             // [NSJSONSerialization JSONObjectWithData:...
+         }
+     }
+     //emtg: end modification to print data content
+
 
     // Construct an OIDServiceDiscovery with the received JSON.
     OIDServiceDiscovery *discovery =
@@ -244,6 +321,7 @@ NS_ASSUME_NONNULL_BEGIN
   }];
   [task resume];
 }
+
 
 #pragma mark - Authorization Endpoint
 
