@@ -30,6 +30,7 @@
 #import "OIDTokenRequest.h"
 #import "OIDTokenResponse.h"
 #import "OIDURLQueryComponent.h"
+#import "OIDFederatedMetadataStatement.h"
 
 /*! @brief Path appended to an OpenID Connect issuer for discovery
     @see https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig
@@ -241,9 +242,9 @@ NS_ASSUME_NONNULL_BEGIN
 
              if([objectDiscoveryDocument isKindOfClass:[NSDictionary class]])
              {
-                 NSDictionary *discoveryResults = objectDiscoveryDocument;
-                 NSString *strDiscoveryData = discoveryResults.debugDescription;
-                 NSLog(@"EMTG - discovery document: \n%@", strDiscoveryData);
+                 NSDictionary *dicDiscoveryDocument = objectDiscoveryDocument;
+                 //NSString *strDiscoveryData = dicDiscoveryDocument.debugDescription;
+                 //NSLog(@"EMTG - discovery document: \n%@", strDiscoveryData);
 
                  //NSLog(@"EMTG - Documents directory: %@", [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsDirectory error:&error]);
                  //NSBundle *mainBundle = [NSBundle mainBundle];
@@ -267,16 +268,16 @@ NS_ASSUME_NONNULL_BEGIN
 
                      if(![objectRootKeysDocument isKindOfClass:[NSDictionary class]])
                      {
-                         //TODO: process error
+                         NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
                      }
                      NSDictionary *dictionaryRootKeys = objectRootKeysDocument;
-
                      NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
                      NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
 
-                     // TODO getFederatedgetFederatedConfiguration
+                     NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
 
-
+                     NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
+                     NSLog(@"EMTG - federated Metadata St.: \n%@", federatedMetadataStr);
                  }
              }
              else

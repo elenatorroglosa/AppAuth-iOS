@@ -36,6 +36,7 @@
 #import "OIDTokenRequest.h"
 #import "OIDTokenResponse.h"
 #import "OIDTokenUtilities.h"
+#import "OIDFederatedMetadataStatement.h"
 
 #if TARGET_OS_TV
 #elif TARGET_OS_WATCH

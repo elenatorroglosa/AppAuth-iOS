@@ -26,6 +26,7 @@
 @class OIDServiceConfiguration;
 @class OIDTokenRequest;
 @class OIDTokenResponse;
+@class OIDFederatedMetadataStatement;
 @protocol OIDAuthorizationFlowSession;
 @protocol OIDAuthorizationUICoordinator;
 
