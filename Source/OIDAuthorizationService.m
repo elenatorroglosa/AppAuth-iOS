@@ -271,8 +271,8 @@ NS_ASSUME_NONNULL_BEGIN
                          NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
                      }
                      NSDictionary *dictionaryRootKeys = objectRootKeysDocument;
-                     NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
-                     NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
+                     //NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
+                     //NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
 
                      NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
 
