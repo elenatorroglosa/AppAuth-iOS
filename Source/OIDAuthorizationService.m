@@ -246,12 +246,6 @@ NS_ASSUME_NONNULL_BEGIN
                  //NSString *strDiscoveryData = dicDiscoveryDocument.debugDescription;
                  //NSLog(@"EMTG - discovery document: \n%@", strDiscoveryData);
 
-                 //NSLog(@"EMTG - Documents directory: %@", [[NSFileManager defaultManager] contentsOfDirectoryAtPath:documentsDirectory error:&error]);
-                 //NSBundle *mainBundle = [NSBundle mainBundle];
-                 //NSString *mainBundleIdentifier = [mainBundle bundleIdentifier];
-                 //NSLog(@"EMTG - mainBundleIdentifier: \n%@",mainBundleIdentifier);
-
-                 //NSLog(@"EMTG - resource Path: \n%@",mainBundle.resourcePath);
                  NSString *rootKeysPath = [[NSBundle mainBundle] pathForResource:@"rootkeys" ofType:@"json"];
                  if (!rootKeysPath) {
                      NSLog(@"EMTG - error formando el path");

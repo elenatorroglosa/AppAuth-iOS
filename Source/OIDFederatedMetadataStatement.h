@@ -13,6 +13,9 @@
 
 @interface OIDFederatedMetadataStatement : NSObject
 
++(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString;
+
++(NSDictionary *) getJWTPayloadWithJWTDocument:(NSString *)jwtDocument;
 
 /*! @internal
  @brief Unavailable. This class should not be initialized.
@@ -27,6 +30,7 @@
 // private static String getMetadataStatement(JSONObject payload, String fed_op) throws IOException, JSONException
 // private static JSONObject verifyMetadataStatement(String ms_jwt, String fed_op, JSONObject root_keys) throws JSONException, BadJOSEException, JOSEException, ParseException, IOException
 // public static JSONObject getFederatedConfiguration(JSONObject discovery_doc, JSONObject root_keys) {
+
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys;
 
 @end

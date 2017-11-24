@@ -23,6 +23,37 @@
 
 @implementation OIDFederatedMetadataStatement
 
+
++(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
+    NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+    if (jsonData) {
+        NSError *jsonError = nil;
+        NSDictionary *jsonDic = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&jsonError];
+        if (jsonDic) {
+            return jsonDic;
+        }
+        NSLog(@"EMTG - Error in the JSON serialization from NSString to NSDictorionary: \n%@", jsonError);
+        return nil;
+    }
+    return nil;
+}
+
++(NSDictionary *) getJWTPayloadWithJWTDocument:(NSString *)jwtDocument {
+    NSArray *payloadArray = [jwtDocument componentsSeparatedByString:@"."];
+    NSString *payloadStr64 = [payloadArray objectAtIndex:1];
+    payloadStr64 = [MF_Base64Codec base64StringFromBase64UrlEncodedString:payloadStr64];
+    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:payloadStr64 options:0];
+
+    NSError *jsonError = nil;
+    NSDictionary *jsonDict = [NSJSONSerialization JSONObjectWithData:decodedData options:0 error:&jsonError];
+    if (jsonDict) {
+        return jsonDict;
+    }
+
+    NSLog(@"EMTG Error in the JSON payload docodification from JWT to NSDictorionary: \n%@", jsonError);
+    return nil;
+}
+
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys {
     
     NSError *jsonError = nil;
@@ -41,24 +72,8 @@
         if (fed_ms_jwt) {
             NSLog(@"EMTG Decoding JWT of Federated Metadata Statement");
             
-            //id<JWTAlgorithm> algorithm = [JWTAlgorithmFactory  algorithmByName:@"RS256"];
+            NSDictionary  *ms_payload = [self getJWTPayloadWithJWTDocument:fed_ms_jwt];
             
-            JWTBuilder *builder = [JWTBuilder decodeMessage:fed_ms_jwt].secret(@"secret").algorithmName(@"RS256");
-            NSDictionary *info = builder.decode;
-            
-            NSLog(@"EMTG - info is: %@", info);
-            NSLog(@"EMTG - error is: %@", builder.jwtError);
-            
-            /*NSString *firstSecret = @"first";
-            NSString *firstAlgorithmName = JWTAlgorithmNameRS256;
-            
-            id <JWTAlgorithmDataHolderProtocol> firstHolder = [JWTAlgorithmHSFamilyDataHolder new].algorithmName(firstAlgorithmName).secret(firstSecret);
-            
-            id <JWTAlgorithmDataHolderProtocol> errorHolder = [JWTAlgorithmNoneDataHolder new];
-            
-            // chain together.
-            JWTAlgorithmDataHolderChain *chain = [[JWTAlgorithmDataHolderChain alloc] initWithHolders:@[firstHolder, errorHolder]];
-*/
             
             /*NSString *algorithmName = @"RS256";
             NSString *secret = @"secret";
@@ -75,18 +90,12 @@
             NSLog(@"EMTG - info is: %@", info);
             NSLog(@"EMTG - error is: %@", builder.jwtError);
             
-            //[[@(noError) should] equal:@(YES)];
              */
-            
-            
         
-            //NSString *payload_str = payload.debugDescription;
-            //NSLog(@"EMTG - metadata_statementt: \n%@", payload_str);
             
             // JSONObject ms_flattened = verifyMetadataStatement(ms_jwt, fed_op, root_keys);
             
-            
-            return info;
+            return ms_payload;
         }
     }
 
