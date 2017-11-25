@@ -23,13 +23,18 @@
 //- (instancetype)init NS_UNAVAILABLE;
 
 // private static boolean isSubset(Object obj1, Object obj2) throws JSONException
-//+(BOOL) isSubsetWithObj1:(id)obj1 obj2:(id)obj2;
+//+ (BOOL) isSubsetWithObj1:(id)obj1 obj2:(id)obj2;
 
 // private static JSONObject flatten(JSONObject upper, JSONObject lower) throws JSONException
 // private static void verifySignature(SignedJWT signedJWT, JWKSet keys) throws BadJOSEException, JOSEException {
-// private static String getMetadataStatement(JSONObject payload, String fed_op) throws IOException, JSONException
-// private static JSONObject verifyMetadataStatement(String ms_jwt, String fed_op, JSONObject root_keys) throws JSONException, BadJOSEException, JOSEException, ParseException, IOException
-// public static JSONObject getFederatedConfiguration(JSONObject discovery_doc, JSONObject root_keys) {
+// -- private static String getMetadataStatement(JSONObject payload, String fed_op) throws IOException, JSONException
+// -- private static JSONObject verifyMetadataStatement(String ms_jwt, String fed_op, JSONObject root_keys) throws JSONException, BadJOSEException, JOSEException, ParseException, IOException
+// ++ public static JSONObject getFederatedConfiguration(JSONObject discovery_doc, JSONObject root_keys) {
++(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSDictionary *)fed_ms_jwt
+                                                 fed_OP:(NSString *)fed_op
+                                               rootKeys:(NSDictionary *)rootKeys;
+
++(NSDictionary *) getMetadataStatementWithDiscoveryDocument:(NSDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP;
 
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys;
 

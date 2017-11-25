@@ -54,6 +54,39 @@
     return nil;
 }
 
++(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSDictionary *)fed_ms_jwt
+                                                 fed_OP:(NSString *)fed_op
+                                               rootKeys:(NSDictionary *)rootKeys {
+    
+    return fed_ms_jwt;
+    
+}
+
++(NSDictionary *) getMetadataStatementWithDiscoveryDocument:(NSDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP {
+    NSString *fed_ms_jwt = [discoveryDoc objectForKey:fed_OP];
+    NSLog(@"EMTG Decoding JWT of Federated Metadata Statement");
+    NSDictionary  *ms_payload = [self getJWTPayloadWithJWTDocument:fed_ms_jwt];
+    
+    /*
+     NSString *algorithmName = @"RS256";
+     NSString *secret = @"secret";
+     JWTClaimsSet *claimsSet = [[JWTClaimsSet alloc] init];
+     claimsSet.subject = @"issuer";
+     JWTClaimsSet *trustedClaimsSet = claimsSet.copy;
+     trustedClaimsSet.expirationDate = [NSDate date];
+     trustedClaimsSet.notBeforeDate = [NSDate date];
+     trustedClaimsSet.issuedAt = [NSDate date];
+     
+     JWTBuilder *builder = [JWT decodeMessage:fed_ms_jwt].secret(secret).claimsSet(trustedClaimsSet).algorithmName(algorithmName);
+     NSDictionary *info = builder.decode;
+     
+     NSLog(@"EMTG - info is: %@", info);
+     NSLog(@"EMTG - error is: %@", builder.jwtError);
+     */
+    
+    return ms_payload;
+}
+
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys {
     
     NSError *jsonError = nil;
@@ -66,39 +99,19 @@
         
         // TODO: String ms_jwt = getMetadataStatement(unsigned_ms, fed_op);
         
-        NSString *fed_ms_jwt = [metadataStatement objectForKey:fed_op];
+        NSDictionary *fed_ms_jwt = [self getMetadataStatementWithDiscoveryDocument:metadataStatement fed_OP:fed_op];
         NSLog(@"EMTG - fed_ms_jwt: \n%@", fed_ms_jwt);
         
         if (fed_ms_jwt) {
-            NSLog(@"EMTG Decoding JWT of Federated Metadata Statement");
             
-            NSDictionary  *ms_payload = [self getJWTPayloadWithJWTDocument:fed_ms_jwt];
-            
-            
-            /*NSString *algorithmName = @"RS256";
-            NSString *secret = @"secret";
-            JWTClaimsSet *claimsSet = [[JWTClaimsSet alloc] init];
-            claimsSet.subject = @"issuer";
-            JWTClaimsSet *trustedClaimsSet = claimsSet.copy;
-            trustedClaimsSet.expirationDate = [NSDate date];
-            trustedClaimsSet.notBeforeDate = [NSDate date];
-            trustedClaimsSet.issuedAt = [NSDate date];
-            
-            JWTBuilder *builder = [JWT decodeMessage:fed_ms_jwt].secret(secret).claimsSet(trustedClaimsSet).algorithmName(algorithmName);
-            NSDictionary *info = builder.decode;
-            
-            NSLog(@"EMTG - info is: %@", info);
-            NSLog(@"EMTG - error is: %@", builder.jwtError);
-            
-             */
-        
-            
-            // JSONObject ms_flattened = verifyMetadataStatement(ms_jwt, fed_op, root_keys);
-            
-            return ms_payload;
+            NSDictionary  *ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:fed_ms_jwt
+                                                                               fed_OP:fed_op
+                                                                             rootKeys:rootKeys];
+            NSLog(@"EMTG -  Statement for federation id %@", fed_op);
+            NSLog(@"%@", ms_flattened.debugDescription);
+            return ms_flattened;
         }
     }
-
     return nil;
 }
 
