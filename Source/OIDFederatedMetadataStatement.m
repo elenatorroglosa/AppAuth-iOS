@@ -213,10 +213,14 @@
         //JSONObject inner_ms_flattened = verifyMetadataStatement(inner_ms_jwt, fed_op, root_keys);
         NSMutableDictionary *inner_ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:inner_ms_jwt fed_OP:fed_op rootKeys:rootKeys];
         
-        /* add signing keys */
-        //TODO: JWKSet inner_ms_sigkeys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
-        //TODO: keys.getKeys().addAll(inner_ms_sigkeys.getKeys());
-        result = [self flattenWithUpper:payload lower:inner_ms_flattened];
+        if (inner_ms_flattened) {
+            /* add signing keys */
+            //TODO: JWKSet inner_ms_sigkeys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
+            //TODO: keys.getKeys().addAll(inner_ms_sigkeys.getKeys());
+            result = [self flattenWithUpper:payload lower:inner_ms_flattened];
+        } else {
+            result = nil;
+        }
     }
     /* If there are no inner metadata statements, this is MS0 and root keys must be used for
      * validating the signature. Result will be the decoded payload */
