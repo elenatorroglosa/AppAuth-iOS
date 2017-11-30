@@ -13,9 +13,11 @@
 
 @interface OIDFederatedMetadataStatement : NSObject
 
-+(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString;
++(NSMutableDictionary *) getJSONfronStringWithString:(NSString *) jsonString;
 
-+(NSDictionary *) getJWTPayloadWithJWTDocument:(NSString *)jwtDocument;
++(NSMutableDictionary *) getJWTPayloadDictionaryWithJWTDocument:(NSString *)jwtDocument;
+
++(NSString *) getJWTPayloadStringWithJWTDocument:(NSString *)jwtDocument;
 
 /*! @internal
  @brief Unavailable. This class should not be initialized.
@@ -48,7 +50,7 @@
  * //@throws InvalidStatementException when there is a policy break and upper MS tries to overwrite lower MS
  *                                   breaking the policies from the OIDC federation draft.
  */
-+(NSDictionary *) flattenWithUpper:(NSDictionary *)upper lower:(NSDictionary *)lower;
++(NSMutableDictionary *) flattenWithUpper:(NSMutableDictionary *)upper lower:(NSMutableDictionary *)lower;
 
 /**
  * @brief Decodes, verifies and flattens a compounded MS for a specific federation operator
@@ -57,13 +59,13 @@
  * @param rootKeys  Collection of JWSK of the accepted FO
  * @return A flattened and verified MS
  */
-+(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
++(NSMutableDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
                                                  fed_OP:(NSString *)fed_op
                                                rootKeys:(NSDictionary *)rootKeys;
 
-+(NSString *) getMetadataStatementWithJSONDocument:(NSDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP;
++(NSString *) getMetadataStatementWithJSONDocument:(NSMutableDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP;
 
-+(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys;
++(NSMutableDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSMutableDictionary *)discoveryDoc rootKeys:(NSMutableDictionary *) rootKeys;
 
 @end
 

@@ -222,14 +222,10 @@ NS_ASSUME_NONNULL_BEGIN
       });
       return;
     }
-    // data is the discovery metadata -- emtg
-
-     //emtg: modification to print data content
-     //NSString *strData = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
-     //NSLog(@"EMTG: %@",strData);
-
-     //NSData *returnedData = ...JSON data, probably from a web request...
-     if (data) {
+ 
+     // data is the discovery metadata -- emtg
+    
+    if (data) {
          if(NSClassFromString(@"NSJSONSerialization"))
          {
              NSError *jsonError = nil;
@@ -238,13 +234,13 @@ NS_ASSUME_NONNULL_BEGIN
                                            options:0
                                            error:&jsonError];
 
-             if(jsonError) { /* JSON was malformed, act appropriately here */ }
+             if(jsonError) {
+                 // JSON was malformed, act appropriately here
+             }
 
              if([objectDiscoveryDocument isKindOfClass:[NSDictionary class]])
              {
                  NSDictionary *dicDiscoveryDocument = objectDiscoveryDocument;
-                 //NSString *strDiscoveryData = dicDiscoveryDocument.debugDescription;
-                 //NSLog(@"EMTG - discovery document: \n%@", strDiscoveryData);
 
                  NSString *rootKeysPath = [[NSBundle mainBundle] pathForResource:@"rootkeys" ofType:@"json"];
                  if (!rootKeysPath) {
@@ -258,7 +254,9 @@ NS_ASSUME_NONNULL_BEGIN
                                                    options:0
                                                    error:&jsonError];
 
-                     if(jsonError) { /* JSON was malformed, act appropriately here */ }
+                     if(jsonError) {
+                         // JSON was malformed, act appropriately here
+                     }
 
                      if(![objectRootKeysDocument isKindOfClass:[NSDictionary class]])
                      {
@@ -272,14 +270,20 @@ NS_ASSUME_NONNULL_BEGIN
 
                      NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
                      NSLog(@"EMTG - federated Metadata St.: \n%@", federatedMetadataStr);
+                     
+                     NSError *error;
+                     data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
+                                                                        options:NSJSONWritingPrettyPrinted
+                                                                          error:&error];
+                     
                  }
              }
              else
              {
-                 /* there's no guarantee that the outermost object in a JSON
-                  packet will be a dictionary; if we get here then it wasn't,
-                  so 'object' shouldn't be treated as an NSDictionary; probably
-                  you need to report a suitable error condition */
+                 // there's no guarantee that the outermost object in a JSON
+                 // packet will be a dictionary; if we get here then it wasn't,
+                 // so 'object' shouldn't be treated as an NSDictionary; probably
+                 // you need to report a suitable error condition
              }
          }
          else
@@ -295,9 +299,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 
     // Construct an OIDServiceDiscovery with the received JSON.
-    OIDServiceDiscovery *discovery =
-        [[OIDServiceDiscovery alloc] initWithJSONData:data error:&error];
-    if (error || !discovery) {
+    OIDServiceDiscovery *discovery = [[OIDServiceDiscovery alloc] initWithJSONData:data error:&error];
+                 
+     if (error || !discovery) {
       error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
                                underlyingError:error
                                    description:nil];
