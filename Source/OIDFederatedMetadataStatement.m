@@ -137,8 +137,14 @@
         else {
             /* Else -> policy breach */
             //TODO:  throw new InvalidStatementException("Policy breach with claim: " + claim_name + ". Lower value=" + lower.get(claim_name) + ". Upper value=" + upper.get(claim_name));
+            flattened = nil;
+            NSLog(@"EMTG - FLATTENED ERROR.");
+            break;
         }
     }
+    if (flattened)
+        NSLog(@"EMTG - Flattened process completed.");
+
     return flattened;
 }
 
@@ -221,9 +227,13 @@
     
     /* verify the signature using the collected keys */
     //TODO verifySignature(signedJWT, keys);
-    NSLog(@"Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+
+    if (result)
+        NSLog(@"Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+    else
+        NSLog(@"EMTG - ERROR in the Metadata Statement verification.");
         //TODO:with KID:" + signedJWT.getHeader().getKeyID());
-    
+
     return result;
 }
 
@@ -246,8 +256,8 @@
             NSMutableDictionary *ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:fed_ms_jwt
                                                                                fed_OP:fed_op
                                                                              rootKeys:rootKeys];
-            NSLog(@"EMTG -  Statement for federation id %@", fed_op);
-            NSLog(@"%@", ms_flattened.debugDescription);
+            //NSLog(@"EMTG - Statement for federation id %@", fed_op);
+            //NSLog(@"%@", ms_flattened.debugDescription);
             return ms_flattened;
         }
     }

@@ -29,7 +29,9 @@ typedef void (^PostRegistrationCallback)(OIDServiceConfiguration *configuration,
 /*! @brief The OIDC issuer from which the configuration will be discovered.
  */
 //static NSString *const kIssuer = @"https://op1.test.inacademia.org/";
-static NSString *const kIssuer = @"https://oidcfed.inf.um.es:8777/";
+//static NSString *const kIssuer = @"https://oidcfed.inf.um.es:8777/"; //<-- running
+static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-single-l0/"; // <-- it seems that it works
+
 
 /*! @brief The OAuth client ID.
     @discussion For client configuration instructions, see the README.

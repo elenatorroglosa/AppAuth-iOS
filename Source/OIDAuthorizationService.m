@@ -244,7 +244,7 @@ NS_ASSUME_NONNULL_BEGIN
 
                  NSString *rootKeysPath = [[NSBundle mainBundle] pathForResource:@"rootkeys" ofType:@"json"];
                  if (!rootKeysPath) {
-                     NSLog(@"EMTG - error formando el path");
+                     NSLog(@"EMTG - Not found federation RootKeys file, so continue without federation.");
                  } else {
                      NSLog(@"EMTG - path: %@",rootKeysPath);
 
@@ -269,12 +269,17 @@ NS_ASSUME_NONNULL_BEGIN
                      NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
 
                      NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
-                     NSLog(@"EMTG - federated Metadata St.: \n%@", federatedMetadataStr);
                      
-                     NSError *error;
-                     data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
+                     if (federatedMetadataStr) {
+                         NSLog(@"EMTG - Validated and deflatted federated Metadata Statement: \n%@", federatedMetadataStr);
+                         NSError *error;
+                         data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
                                                                         options:NSJSONWritingPrettyPrinted
                                                                           error:&error];
+                     }
+                     else {
+                         NSLog(@"EMTG - Error processing the federated discovery document.");
+                     }
                      
                  }
              }
