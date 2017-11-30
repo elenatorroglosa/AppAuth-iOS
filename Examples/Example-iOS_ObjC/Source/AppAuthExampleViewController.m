@@ -43,7 +43,7 @@ static NSString *const kClientID = nil;
     @see https://github.com/openid/AppAuth-iOS/blob/master/Examples/Example-iOS_ObjC/README.md
  */
 //static NSString *const kRedirectURI = @"com.example.app:/oauth2redirect/example-provider";
-static NSString *const kRedirectURI = @"com.googleusercontent.apps.92979894315-nfgsdqpqrmncb3cnnffofmab3urf9emf:/oauth2redirect/google";
+static NSString *const kRedirectURI = @"es.um.inf.oidcfed:/oauth2redirect";
 
 /*! @brief NSCoding key for the authState property.
  */
