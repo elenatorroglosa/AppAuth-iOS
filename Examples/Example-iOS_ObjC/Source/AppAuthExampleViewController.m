@@ -29,14 +29,14 @@ typedef void (^PostRegistrationCallback)(OIDServiceConfiguration *configuration,
 /*! @brief The OIDC issuer from which the configuration will be discovered.
  */
 //static NSString *const kIssuer = @"https://op1.test.inacademia.org/";
-//static NSString *const kIssuer = @"https://oidcfed.inf.um.es:8777/"; //<-- running
+static NSString *const kIssuer = @"https://oidcfed.inf.um.es:8777/"; //<-- running
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-single-l0/"; // <-- it seems that it works
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-single-l1/"; // <-- it seems that it works
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-single-l2/"; // <-- it seems that it works
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-multiple-l0/"; // <-- it seems that it works
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-multiple-l1/"; // <-- it seems that it works
 //static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-policy-err-l1/"; // <-- it seems that it works. it has to fail, and fails.
-static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-policy-err-l2/"; // <-- it seems that it works. it has to fail, and fails.
+//static NSString *const kIssuer = @"https://agaton-sax.com:8080/foo/rp-sms-policy-err-l2/"; // <-- it seems that it works. it has to fail, and fails.
 
 
 /*! @brief The OAuth client ID.
