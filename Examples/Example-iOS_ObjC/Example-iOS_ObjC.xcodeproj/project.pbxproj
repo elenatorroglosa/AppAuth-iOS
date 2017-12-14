@@ -15,6 +15,8 @@
 		346E91991C2A245000D3620B /* SafariServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 346E91981C2A245000D3620B /* SafariServices.framework */; };
 		34CB09BD1C42007600A54261 /* AppAuthExampleViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 34CB09BB1C42007600A54261 /* AppAuthExampleViewController.m */; };
 		34CB09BE1C42007600A54261 /* AppAuthExampleViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 34CB09BC1C42007600A54261 /* AppAuthExampleViewController.xib */; };
+		D5275BEE1FD07D1800818F02 /* libJWT.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D5275BEF1FD07D1800818F02 /* libJWT.a */; };
+		D5275BF31FD1853200818F02 /* rootkeys.pem in Resources */ = {isa = PBXBuildFile; fileRef = D5275BF21FD1852E00818F02 /* rootkeys.pem */; };
 		D55B5CB91FC1AC450062DDC4 /* rootkeys.json in Resources */ = {isa = PBXBuildFile; fileRef = D55B5CB81FC1AC3F0062DDC4 /* rootkeys.json */; };
 		D55B5CBA1FC1AC4E0062DDC4 /* rootkeys.json in Resources */ = {isa = PBXBuildFile; fileRef = D55B5CB81FC1AC3F0062DDC4 /* rootkeys.json */; };
 		D55B5CBB1FC1AC5F0062DDC4 /* rootkeys.json in Sources */ = {isa = PBXBuildFile; fileRef = D55B5CB81FC1AC3F0062DDC4 /* rootkeys.json */; };
@@ -51,6 +53,10 @@
 		34CB09BC1C42007600A54261 /* AppAuthExampleViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AppAuthExampleViewController.xib; sourceTree = "<group>"; };
 		8B61A918CBE7B8142CD7D8B3 /* libPods-Example-iOS_ObjC.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Example-iOS_ObjC.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4C31DB4A4928F246AA03805 /* Pods-Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-Example/Pods-Example.release.xcconfig"; sourceTree = "<group>"; };
+		D5275BEB1FD07CCB00818F02 /* JWT.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JWT.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5275BED1FD07D0500818F02 /* JWT.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = JWT.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5275BEF1FD07D1800818F02 /* libJWT.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libJWT.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5275BF21FD1852E00818F02 /* rootkeys.pem */ = {isa = PBXFileReference; lastKnownFileType = text; name = rootkeys.pem; path = ../../rootkeys.pem; sourceTree = "<group>"; };
 		D55B5CB81FC1AC3F0062DDC4 /* rootkeys.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = rootkeys.json; path = Source/rootkeys.json; sourceTree = "<group>"; };
 		D55B5CDC1FC2161E0062DDC4 /* libAppAuth.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAppAuth.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9867DC6FA9089CD613D4728 /* Pods-Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Example/Pods-Example.debug.xcconfig"; sourceTree = "<group>"; };
@@ -69,6 +75,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D5275BEE1FD07D1800818F02 /* libJWT.a in Frameworks */,
 				346E91991C2A245000D3620B /* SafariServices.framework in Frameworks */,
 				E46F8589CE9E5DDFA69D835B /* libPods-Example-iOS_ObjC.a in Frameworks */,
 			);
@@ -89,8 +96,11 @@
 		341564001C487ABA00ECA3D9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D5275BEF1FD07D1800818F02 /* libJWT.a */,
 				D55B5CDC1FC2161E0062DDC4 /* libAppAuth.a */,
+				D5275BED1FD07D0500818F02 /* JWT.framework */,
 				3474C8DD1DFCB08E00F22B34 /* libAppAuth-iOS.a */,
+				D5275BEB1FD07CCB00818F02 /* JWT.framework */,
 				346E91981C2A245000D3620B /* SafariServices.framework */,
 				09795EAF079B07A1781675D9 /* libPods-Example.a */,
 				8B61A918CBE7B8142CD7D8B3 /* libPods-Example-iOS_ObjC.a */,
@@ -101,6 +111,7 @@
 		346E91601C29D42800D3620B = {
 			isa = PBXGroup;
 			children = (
+				D5275BF21FD1852E00818F02 /* rootkeys.pem */,
 				D55B5CB81FC1AC3F0062DDC4 /* rootkeys.json */,
 				346E916B1C29D42800D3620B /* Source */,
 				341310A81E6DEF7000D5DEE5 /* Tests */,
@@ -240,6 +251,7 @@
 			files = (
 				346E917C1C29D42800D3620B /* LaunchScreen.storyboard in Resources */,
 				D55B5CB91FC1AC450062DDC4 /* rootkeys.json in Resources */,
+				D5275BF31FD1853200818F02 /* rootkeys.pem in Resources */,
 				346E91791C29D42800D3620B /* Assets.xcassets in Resources */,
 				34CB09BE1C42007600A54261 /* AppAuthExampleViewController.xib in Resources */,
 			);
