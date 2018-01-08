@@ -25,11 +25,11 @@
 @implementation OIDFederatedMetadataStatement
 
 
-+(NSMutableDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
++(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
     if (jsonData) {
         NSError *jsonError = nil;
-        NSMutableDictionary *jsonDic = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&jsonError];
+        NSDictionary *jsonDic = [NSJSONSerialization JSONObjectWithData:jsonData options:0 error:&jsonError];
         if (jsonDic) {
             return jsonDic;
         }
@@ -52,13 +52,21 @@
     return nil;
 }
 
++(NSDictionary *) getHeaderDictioryFromJWTString:(NSString *) token {
+    NSArray *tokenArray = [token componentsSeparatedByString:@"."];
+    NSString *headerStr64url = [tokenArray objectAtIndex:0];
+    NSString *headerStr64 = [MF_Base64Codec base64StringFromBase64UrlEncodedString:headerStr64url];
+    //return [self getJSONfronStringWithString:headerStr64];
+    return [self deserializationJSONObjectWithString:headerStr64];
+}
+
 +(NSString *) getJWTPayloadStringWithJWTDocument:(NSString *)jwtDocument {
     NSArray *payloadArray = [jwtDocument componentsSeparatedByString:@"."];
     NSString *payloadStr64url = [payloadArray objectAtIndex:1];
     return [MF_Base64Codec base64StringFromBase64UrlEncodedString:payloadStr64url];
 }
 
-+ (NSMutableDictionary *) deserializationJSONObjectWithString:(NSString *)jsonString {
++ (NSDictionary *) deserializationJSONObjectWithString:(NSString *)jsonString {
     NSError *jsonError = nil;
     NSData* payloadJsonData = [[NSData alloc]
                                initWithBase64EncodedString:jsonString
@@ -116,9 +124,9 @@
     return NO;
 }
 
-+(NSMutableDictionary *) flattenWithUpper:(NSMutableDictionary *)upper lower:(NSMutableDictionary *)lower {
-    NSMutableArray *use_lower = [NSMutableArray arrayWithObjects:@"iss", @"sub", @"aud", @"exp", @"nbf", @"iat", @"jti", nil];
-    NSMutableArray *use_upper = [NSMutableArray arrayWithObjects:@"signing_keys", @"signing_keys_uri", @"metadata_statement_uris", @"kid", @"metadata_statements", @"usage", nil];
++(NSDictionary *) flattenWithUpper:(NSDictionary *)upper lower:(NSDictionary *)lower {
+    NSArray *use_lower = [NSMutableArray arrayWithObjects:@"iss", @"sub", @"aud", @"exp", @"nbf", @"iat", @"jti", nil];
+    NSArray *use_upper = [NSMutableArray arrayWithObjects:@"signing_keys", @"signing_keys_uri", @"metadata_statement_uris", @"kid", @"metadata_statements", @"usage", nil];
     
     /* result starts as a copy of lower MS */
     NSMutableDictionary * flattened = [NSMutableDictionary dictionaryWithDictionary:lower];
@@ -145,10 +153,68 @@
     if (flattened)
         NSLog(@"EMTG - Flattened process completed.");
 
-    return flattened;
+    return [NSDictionary dictionaryWithDictionary:flattened];;
 }
 
-//getMetadataStatementWithJWTDocument
++(NSDictionary *) getJWKDictionaryFromJWTPayloadString:(NSString *) jwtString {
+    NSDictionary *payload = [self getJWTPayloadDictionaryWithJWTDocument:jwtString];
+    NSDictionary *jwkDic = [payload objectForKey:@"signing_keys"];
+    return jwkDic;
+}
+
++ (BOOL) verifySignatureWithFed_ms_jwt:(NSString *)fed_ms_jwt validKeys:(NSDictionary *)validKeys {
+    NSDictionary *header = [self getHeaderDictioryFromJWTString:fed_ms_jwt];
+    NSString *kid = [header objectForKey:@"kid"];
+    
+    NSString *alg = [header objectForKey:@"alg"];
+    NSString *algorithmName = @"RS256";
+    
+    NSLog(@"EMTG - print header params alg: %@ and kid: %@", alg, kid);
+    
+    NSString *publicKey = nil;
+    
+    NSArray * keysArray = [validKeys objectForKey:@"keys"];
+    for (NSDictionary *keyDic in keysArray) {
+        NSString *value = [keyDic valueForKey:@"kid"];
+        if ([value isEqualToString:kid]) {
+            publicKey = [keyDic valueForKey:@"n"];
+            NSLog(@"EMTG - public key found for kid: %@", kid);
+        }
+    }
+    
+    if (!publicKey) {
+        NSLog(@"EMTG - Error: public key not found for kid %@", kid);
+        return NO;
+    }
+    // extract keys
+    //NSString *privateKey = //extract from JWK dictionary//;
+    // and put them into appropriate key.
+    // pass nil parameters
+    NSDictionary *parameters = nil;
+    NSError *theError = nil;
+    //NSError **error = &theError;
+    NSError *__autoreleasing*error;
+    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:(NSString *)publicKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
+    //id privateJWTKey = [[JWTCryptoKeyPrivate alloc] initWithBase64String:(NSString *)privateKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
+    
+    
+    id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].verifyKey(publicJWTKey);
+    
+    JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:fed_ms_jwt].addHolder(verifyDataHolder);
+    JWTCodingResultType *verifyResult = verifyBuilder.result;
+    if (verifyResult.successResult) {
+        // success
+        NSLog(@"%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        //token = verifyResult.successResult.encoded;
+        return YES;
+    }
+    else {
+        // error
+        NSLog(@"%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
+        return NO;
+    }
+}
+
 
 
 
@@ -179,21 +245,20 @@
                                        json = [self getJWTPayloadStringWithJWTDocument:[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]];
                                        NSLog(@"EMTG - Async JSON: %@", json);
                                    }];
-            
             return json;
         }
     }
     return nil;
 }
 
-+(NSMutableDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
++(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
                                                  fed_OP:(NSString *)fed_op
                                                rootKeys:(NSDictionary *)rootKeys {
     
     //System.out.println("Inspecting MS signed by: " + payload.getString("iss") + " with KID:" + signedJWT.getHeader().getKeyID());
     
-    //NSDictionary *payload = [self getJWTPayloadDictionaryWithJWTDocument:fed_ms_jwt];
-    NSMutableDictionary *payload = [self deserializationJSONObjectWithString:fed_ms_jwt];
+    NSDictionary *keys = rootKeys;
+    NSDictionary *payload = [self deserializationJSONObjectWithString:fed_ms_jwt];
     if (!payload)
         return nil;
     
@@ -211,12 +276,11 @@
     if (inner_ms_jwt != nil) {
         /* Recursion here to get a verified and flattened version of inner_ms */
         //JSONObject inner_ms_flattened = verifyMetadataStatement(inner_ms_jwt, fed_op, root_keys);
-        NSMutableDictionary *inner_ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:inner_ms_jwt fed_OP:fed_op rootKeys:rootKeys];
+        NSDictionary *inner_ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:inner_ms_jwt fed_OP:fed_op rootKeys:rootKeys];
         
         if (inner_ms_flattened) {
             /* add signing keys */
-            //TODO: JWKSet inner_ms_sigkeys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
-            //TODO: keys.getKeys().addAll(inner_ms_sigkeys.getKeys());
+            //TODO: keys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
             result = [self flattenWithUpper:payload lower:inner_ms_flattened];
         } else {
             result = nil;
@@ -226,14 +290,25 @@
      * validating the signature. Result will be the decoded payload */
     else {
         //TODO: keys = JWKSet.parse(root_keys.getJSONObject(fed_op).toString());
+        keys = [rootKeys objectForKey:fed_op];
         result = payload;
     }
     
     /* verify the signature using the collected keys */
-    //TODO verifySignature(signedJWT, keys);
-
-    if (result)
-        NSLog(@"Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+    if (result) {
+        NSLog(@"Completed flattened process of fed_ms_st.");
+        
+        BOOL isVerified = [self verifySignatureWithFed_ms_jwt:fed_ms_jwt validKeys:keys];
+        if (isVerified) {
+            NSLog(@"Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+            return result;
+        }
+        else {
+            NSLog(@"Invalid signature of Metadata Statement");
+            return nil;
+        }
+    }
+    
     else
         NSLog(@"EMTG - ERROR in the Metadata Statement verification.");
         //TODO:with KID:" + signedJWT.getHeader().getKeyID());

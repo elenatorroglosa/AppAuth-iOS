@@ -50,7 +50,7 @@
  * //@throws InvalidStatementException when there is a policy break and upper MS tries to overwrite lower MS
  *                                   breaking the policies from the OIDC federation draft.
  */
-+(NSMutableDictionary *) flattenWithUpper:(NSMutableDictionary *)upper lower:(NSMutableDictionary *)lower;
++(NSDictionary *) flattenWithUpper:(NSDictionary *)upper lower:(NSDictionary *)lower;
 
 /**
  * @brief Decodes, verifies and flattens a compounded MS for a specific federation operator
@@ -59,13 +59,13 @@
  * @param rootKeys  Collection of JWSK of the accepted FO
  * @return A flattened and verified MS
  */
-+(NSMutableDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
++(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
                                                  fed_OP:(NSString *)fed_op
                                                rootKeys:(NSDictionary *)rootKeys;
 
-+(NSString *) getMetadataStatementWithJSONDocument:(NSMutableDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP;
++(NSString *) getMetadataStatementWithJSONDocument:(NSDictionary *)discoveryDoc fed_OP:(NSString *) fed_OP;
 
-+(NSMutableDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSMutableDictionary *)discoveryDoc rootKeys:(NSMutableDictionary *) rootKeys;
++(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys;
 
 @end
 
