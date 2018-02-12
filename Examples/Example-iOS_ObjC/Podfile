@@ -5,4 +5,5 @@ target 'Example-iOS_ObjC' do
   # In production, just use `pod 'AppAuth'` without the path reference.
   pod 'AppAuth', :path => '../../'
   pod 'JWT', :git => 'https://github.com/yourkarma/JWT.git', :branch => 'master'
+  pod 'OpenSSL', '~> 1.0'
 end
