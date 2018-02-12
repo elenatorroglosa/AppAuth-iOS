@@ -204,13 +204,13 @@
     JWTCodingResultType *verifyResult = verifyBuilder.result;
     if (verifyResult.successResult) {
         // success
-        NSLog(@"%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        NSLog(@"EMTG - %@ success: %@", self.debugDescription, verifyResult.successResult.payload);
         //token = verifyResult.successResult.encoded;
         return YES;
     }
     else {
         // error
-        NSLog(@"%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
+        NSLog(@"EMTG - %@ error: %@", self.debugDescription, verifyResult.errorResult.error);
         return NO;
     }
 }
@@ -263,7 +263,7 @@
         return nil;
     
     //NSLog(@"The payload is %@.", payload.debugDescription);
-    NSLog(@"Inspecting MS signed by %@.", [payload objectForKey:@"iss"]);
+    NSLog(@"EMTG - Inspecting MS signed by %@.", [payload objectForKey:@"iss"]);
     
     /* Collect inner MS (JWT encoded) */
     NSString *inner_ms_jwt = [self getMetadataStatementWithJSONDocument:payload fed_OP:fed_op];
@@ -296,15 +296,15 @@
     
     /* verify the signature using the collected keys */
     if (result) {
-        NSLog(@"Completed flattened process of fed_ms_st.");
+        NSLog(@"EMTG - Completed flattened process of fed_ms_st.");
         
         BOOL isVerified = [self verifySignatureWithFed_ms_jwt:fed_ms_jwt validKeys:keys];
         if (isVerified) {
-            NSLog(@"Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+            NSLog(@"EMTG - Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
             return result;
         }
         else {
-            NSLog(@"Invalid signature of Metadata Statement");
+            NSLog(@"EMTG - Invalid signature of Metadata Statement");
             return nil;
         }
     }
