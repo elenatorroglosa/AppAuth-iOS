@@ -22,8 +22,129 @@
 //#import <JWT/JWTRSAlgorithm.h>
 //#import <JWT/JWTAlgorithmDataHolderChain.h>
 
+#import <openssl/rsa.h>
+#include <openssl/engine.h>
+#import <openssl/pem.h>
+
 @implementation OIDFederatedMetadataStatement
 
+static inline char itoh(int i) {
+    if (i > 9) return 'A' + (i - 10);
+    return '0' + i;
+}
+
++(NSString *) NSDataToHex: (NSData *) data {
+    NSUInteger i, len;
+    unsigned char *buf, *bytes;
+
+    len = data.length;
+    bytes = (unsigned char*)data.bytes;
+    buf = malloc(len*2);
+
+    for (i=0; i<len; i++) {
+        buf[i*2] = itoh((bytes[i] >> 4) & 0xF);
+        buf[i*2+1] = itoh(bytes[i] & 0xF);
+    }
+
+    return [[NSString alloc] initWithBytesNoCopy:buf
+                                          length:len*2
+                                        encoding:NSASCIIStringEncoding
+                                    freeWhenDone:YES];
+}
+
++(NSString *) convertFromJWKtoPEM: (NSDictionary *)jwk {
+
+    NSLog(@"EMTG - starting convertFromJWKtoPEM");
+    RSA * rsaKey = RSA_new();
+
+    ENGINE * rsaEngine = ENGINE_get_default_RSA();
+    ENGINE_init(rsaEngine);
+
+    rsaKey->engine = rsaEngine;
+
+    BIGNUM *n_bn = NULL, *e_bn = NULL;
+    BIGNUM *d = NULL, *p = NULL, *q = NULL;
+
+    e_bn = BN_new();
+    n_bn = BN_new();
+
+    //NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
+    NSString * nzu = @"ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ";
+
+    NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
+    //NSString * ezu = @"AQAB";
+
+    NSLog(@"EMTG - load param n: \n%@", nzu);
+    NSLog(@"EMTG - load param e: \n%@", ezu);
+
+    //StringSource ss1(nz, true, new Base64Decoder(new StringSink(nn)));
+    NSString *nz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:nzu];
+    NSData *nn = [[NSData alloc]
+                               initWithBase64EncodedString:nz
+                               options:0];
+
+    NSString *ez = [MF_Base64Codec base64StringFromBase64UrlEncodedString:ezu];
+    NSData *en = [[NSData alloc]
+                  initWithBase64EncodedString:ez
+                  options:0];
+
+    NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
+    NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
+
+    NSString * ehexString = [self NSDataToHex:en];
+    NSString * nhexString = [self NSDataToHex:nn];
+    NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
+
+    const char *e_char = [ehexString UTF8String];
+    const char *n_char = [nhexString UTF8String];
+
+    //int BN_hex2bn(BIGNUM **a, const char *str);
+    int res1 = BN_hex2bn(&e_bn, e_char);
+    int res2 = BN_hex2bn(&n_bn, n_char);
+
+    rsaKey->e = e_bn;
+    rsaKey->n = n_bn;
+
+    int rc = RSA_check_key(rsaKey);
+    long err = ERR_get_error();
+    if(rc != 1) {
+        //cerr << "RSA_check_key failed, error 0x" << std::hex << err << endl;
+        NSLog(@"RSA_check_key failed, error 0x");
+        //return nil; //exit(1);
+    }
+
+    NSString * tmpFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
+
+    NSLog(@"EMTG - Temporary File Path: %@", tmpFilePath);
+
+    FILE *tmpPEMFile = fopen([tmpFilePath cStringUsingEncoding:NSASCIIStringEncoding], "rw");
+    int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey);
+    NSLog(@"EMTG - conversion result form RSA to PEM: %d", res_conversion);
+
+    // read the contents into a string
+    NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpFilePath encoding:NSUTF8StringEncoding error:nil];
+    fclose(tmpPEMFile);
+    // display our file
+    NSLog(@"EMTG - PEM String content: \n%@", pemStr);
+
+    //NSInteger n((byte*)nn.data(), nn.size())
+
+    //int rc = BN_dec2bn(&n, nz);
+    /*if(rc == 0 || n == NULL) {
+        NSLog(@"BN_dec2bn failed for n", jsonError);
+        cerr << "BN_dec2bn failed for n" << endl;
+        exit(1);
+    }
+    rsa->n = n;*/
+    //rsaItem->n = B
+
+    RSA * rsaMethod = RSA_new_method(rsaEngine);
+
+    ENGINE_finish(rsaEngine);
+    RSA_free(rsaKey);
+
+    return nil;
+}
 
 +(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
     NSData *jsonData = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
@@ -47,7 +168,7 @@
     if (jsonDict) {
         return jsonDict;
     }
-    
+
     NSLog(@"EMTG Error in the JSON payload docodification from JWT to NSDictorionary: \n%@", jsonError);
     return nil;
 }
@@ -72,7 +193,7 @@
                                initWithBase64EncodedString:jsonString
                                options:NSDataBase64DecodingIgnoreUnknownCharacters];
     //NSData *data = [jsonString dataUsingEncoding:NSUTF8StringEncoding];
-    
+
     NSMutableDictionary *json = [NSJSONSerialization JSONObjectWithData:payloadJsonData options:0 error:&jsonError];
     //NSDictionary<NSString *, NSObject <NSCopying> *> *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonDeserializationError];
     if (jsonError) {
@@ -86,10 +207,10 @@
 }
 
 +(BOOL) isSubsetWithObj1:(id)obj1 obj2:(id)obj2 {
-    
+
     if (![obj1 isKindOfClass:[obj2 class]])
         return NO;
-    
+
     // Both objects have the same classtype
     if ([obj1 isKindOfClass:[NSString class]])
         return [obj1 isEqualToString:obj2];
@@ -127,13 +248,13 @@
 +(NSDictionary *) flattenWithUpper:(NSDictionary *)upper lower:(NSDictionary *)lower {
     NSArray *use_lower = [NSMutableArray arrayWithObjects:@"iss", @"sub", @"aud", @"exp", @"nbf", @"iat", @"jti", nil];
     NSArray *use_upper = [NSMutableArray arrayWithObjects:@"signing_keys", @"signing_keys_uri", @"metadata_statement_uris", @"kid", @"metadata_statements", @"usage", nil];
-    
+
     /* result starts as a copy of lower MS */
     NSMutableDictionary * flattened = [NSMutableDictionary dictionaryWithDictionary:lower];
     for (NSString * claim_name in [upper allKeys]) {
         if ([use_lower containsObject:claim_name])
             continue;
-        
+
         /* If the claim does not exist on lower, or it is marked as "use_upper", or is a
          subset of lower, then use upper's one -> OK */
         // if (lower.opt(claim_name) == null || use_upper_list.contains(claim_name)|| isSubset(upper.get(claim_name), lower.get(claim_name))) {
@@ -164,28 +285,33 @@
 
 + (BOOL) verifySignatureWithFed_ms_jwt:(NSString *)fed_ms_jwt validKeys:(NSDictionary *)validKeys {
     NSDictionary *header = [self getHeaderDictioryFromJWTString:fed_ms_jwt];
+    NSLog(@"EMTG - verifySignatureWithFed_ms_jwt - header: \n%@", header.debugDescription);
+
     NSString *kid = [header objectForKey:@"kid"];
-    
     NSString *alg = [header objectForKey:@"alg"];
     NSString *algorithmName = @"RS256";
-    
+
     NSLog(@"EMTG - print header params alg: %@ and kid: %@", alg, kid);
-    
-    NSString *publicKey = nil;
-    
-    NSArray * keysArray = [validKeys objectForKey:@"keys"];
+
+    //NSString *publicKey = nil;
+
+    /*NSArray * keysArray = [validKeys objectForKey:@"keys"];
     for (NSDictionary *keyDic in keysArray) {
         NSString *value = [keyDic valueForKey:@"kid"];
         if ([value isEqualToString:kid]) {
             publicKey = [keyDic valueForKey:@"n"];
             NSLog(@"EMTG - public key found for kid: %@", kid);
         }
+    }*/
+
+    NSDictionary * publicKey = [validKeys valueForKey:kid];
+    if (publicKey == nil) {
+        NSLog(@"EMTG - ERROR: public key not found for kid: %@", kid);
     }
-    
-    if (!publicKey) {
-        NSLog(@"EMTG - Error: public key not found for kid %@", kid);
-        return NO;
-    }
+    NSLog(@"EMTG - public key found for kid: %@", kid);
+
+    NSString * pemPublicKey =  [self convertFromJWKtoPEM:publicKey];
+
     // extract keys
     //NSString *privateKey = //extract from JWK dictionary//;
     // and put them into appropriate key.
@@ -194,39 +320,39 @@
     NSError *theError = nil;
     //NSError **error = &theError;
     NSError *__autoreleasing*error;
-    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:(NSString *)publicKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
+
     //id privateJWTKey = [[JWTCryptoKeyPrivate alloc] initWithBase64String:(NSString *)privateKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
-    
-    
-    id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].verifyKey(publicJWTKey);
-    
+    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:(NSString *)publicKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
+
+    /*id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].verifyKey(pemPublicKey);
+
     JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:fed_ms_jwt].addHolder(verifyDataHolder);
     JWTCodingResultType *verifyResult = verifyBuilder.result;
+ 
     if (verifyResult.successResult) {
         // success
         NSLog(@"EMTG - %@ success: %@", self.debugDescription, verifyResult.successResult.payload);
         //token = verifyResult.successResult.encoded;
         return YES;
-    }
-    else {
+    } else {
         // error
         NSLog(@"EMTG - %@ error: %@", self.debugDescription, verifyResult.errorResult.error);
         return NO;
     }
+    */
+    return NO;
 }
-
-
-
 
 +(NSString *) getMetadataStatementWithJSONDocument:(NSDictionary *)jsonDoc fed_OP:(NSString *) fed_OP {
     NSMutableDictionary *ms = [jsonDoc objectForKey:@"metadata_statements"];
-    
+
     NSLog(@"EMTG - Decoding JWT of Federated Metadata Statement");
     if (ms != nil) {
         //NSDictionary  *ms_Dic = [self deserializationJSONObjectWithString:ms];
         NSString *ms_value = [ms objectForKey:fed_OP];
         if (ms_value != nil)
-            return [self getJWTPayloadStringWithJWTDocument:ms_value];
+            //return [self getJWTPayloadStringWithJWTDocument:ms_value];
+            return ms_value;
     }
     
     NSMutableDictionary *ms_uris = [jsonDoc objectForKey:@"metadata_statement_uris"];
@@ -236,13 +362,15 @@
         if (ms_uri_value != nil) {
             // Si no es nulo, recupero el documento de la URI
             NSURLRequest *request = [[NSURLRequest alloc] initWithURL:[NSURL URLWithString:ms_uri_value]];
-            
+
             __block NSString *json;
             [NSURLConnection sendAsynchronousRequest:request
                                                queue:[NSOperationQueue mainQueue]
                                    completionHandler:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
                                        //json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-                                       json = [self getJWTPayloadStringWithJWTDocument:[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]];
+                                       //json = [self getJWTPayloadStringWithJWTDocument:[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]];
+                                       json = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
+
                                        NSLog(@"EMTG - Async JSON: %@", json);
                                    }];
             return json;
@@ -251,38 +379,58 @@
     return nil;
 }
 
++(NSMutableDictionary *) addKeysFromArrayToDic:(NSMutableDictionary *)keyDict keyArray:(NSArray *) keyArray {
+    if (keyDict == nil)
+        keyDict = [[NSMutableDictionary alloc] init];
+
+    //NSLog(@"EMTG - addKeysFromArrayToDic: debug array: \n%@", [keyArray debugDescription]);
+
+    for (id item in keyArray) {
+        NSDictionary * dic = item;
+        [keyDict setObject:dic forKey:[dic valueForKey:@"kid"]];
+    }
+
+    NSLog(@"EMTG - addKeysFromArrayToDic: \n%@", [keyDict debugDescription]);
+    return keyDict;
+}
+
 +(NSDictionary *) verifyMetadataStatementWithFed_ms_jwt:(NSString *)fed_ms_jwt
                                                  fed_OP:(NSString *)fed_op
                                                rootKeys:(NSDictionary *)rootKeys {
-    
+
     //System.out.println("Inspecting MS signed by: " + payload.getString("iss") + " with KID:" + signedJWT.getHeader().getKeyID());
-    
+
     NSDictionary *keys = rootKeys;
-    NSDictionary *payload = [self deserializationJSONObjectWithString:fed_ms_jwt];
-    if (!payload)
+    NSString *payload_str = [self getJWTPayloadStringWithJWTDocument:fed_ms_jwt];
+    NSDictionary *payload = [self deserializationJSONObjectWithString:payload_str];
+
+    if (!payload) {
+        NSLog(@"EMTG - ERROR extracting Metadata Statemente's payload.");
         return nil;
-    
+    }
+
     //NSLog(@"The payload is %@.", payload.debugDescription);
     NSLog(@"EMTG - Inspecting MS signed by %@.", [payload objectForKey:@"iss"]);
-    
+
     /* Collect inner MS (JWT encoded) */
     NSString *inner_ms_jwt = [self getMetadataStatementWithJSONDocument:payload fed_OP:fed_op];
-    
+
     /* This will hold the result of the verification/decoding/flattening */
     NSMutableDictionary *result;
-    
+
     /* If there are more MSs, recursively analyzed them and return the flattened version
      * with the inner payload */
     if (inner_ms_jwt != nil) {
         /* Recursion here to get a verified and flattened version of inner_ms */
         //JSONObject inner_ms_flattened = verifyMetadataStatement(inner_ms_jwt, fed_op, root_keys);
         NSDictionary *inner_ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:inner_ms_jwt fed_OP:fed_op rootKeys:rootKeys];
-        
+
         if (inner_ms_flattened) {
             /* add signing keys */
             //TODO: keys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
             result = [self flattenWithUpper:payload lower:inner_ms_flattened];
         } else {
+            NSLog(@"EMTG - verifyMetadataStatementWithFed_ms_jwt: Error at the flattened process");
             result = nil;
         }
     }
@@ -290,14 +438,15 @@
      * validating the signature. Result will be the decoded payload */
     else {
         //TODO: keys = JWKSet.parse(root_keys.getJSONObject(fed_op).toString());
-        keys = [rootKeys objectForKey:fed_op];
+
+        keys = [self addKeysFromArrayToDic:nil keyArray:[[rootKeys objectForKey:fed_op] objectForKey:@"keys"]];
         result = payload;
     }
     
     /* verify the signature using the collected keys */
     if (result) {
         NSLog(@"EMTG - Completed flattened process of fed_ms_st.");
-        
+    
         BOOL isVerified = [self verifySignatureWithFed_ms_jwt:fed_ms_jwt validKeys:keys];
         if (isVerified) {
             NSLog(@"EMTG - Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
@@ -312,27 +461,27 @@
     else
         NSLog(@"EMTG - ERROR in the Metadata Statement verification.");
         //TODO:with KID:" + signedJWT.getHeader().getKeyID());
-
+    
     return result;
 }
 
 
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys {
-    
     //NSError *jsonError = nil;
     //NSDictionary *metadataStatement = [discoveryDoc objectForKey:@"metadata_statements"];
     //NSArray *fedetatedOPs = [metadataStatement allKeys];
     for (NSString* fed_op in rootKeys.allKeys) {
-        NSLog(@"EMTG Looking for a valid metada_statement for %@", fed_op);
-        
+        NSLog(@"EMTG - Looking for a valid metada_statement for %@", fed_op);
+        //NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
+
         // TODO: String ms_jwt = getMetadataStatement(unsigned_ms, fed_op);
-        
+
         NSString *fed_ms_jwt = [self getMetadataStatementWithJSONDocument:[discoveryDoc mutableCopy] fed_OP:fed_op];
         //NSLog(@"EMTG - getMetadataStatementWithJSONDocument: \n%@", fed_ms_jwt);
         
         if (fed_ms_jwt) {
-            
-            NSMutableDictionary *ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:fed_ms_jwt
+
+            NSDictionary *ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:fed_ms_jwt
                                                                                fed_OP:fed_op
                                                                              rootKeys:rootKeys];
             //NSLog(@"EMTG - Statement for federation id %@", fed_op);
@@ -342,5 +491,4 @@
     }
     return nil;
 }
-
 @end
