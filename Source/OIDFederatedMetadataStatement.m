@@ -15,7 +15,6 @@
 #import <Base64/MF_Base64Additions.h>
 
 //#import <JWT/JWTBuilder.h>
-//#import <JWT/JWTAlgorithmFactory.h>
 //#import <JWT/JWTAlgorithmDataHolder.h>
 //#import <JWT/JWTAlgorithmRSBase.h>
 //#import <JWT/JWTAlgorithmNone.h>
@@ -57,27 +56,26 @@ static inline char itoh(int i) {
     NSLog(@"EMTG - starting convertFromJWKtoPEM");
     RSA * rsaKey = RSA_new();
 
-    ENGINE * rsaEngine = ENGINE_get_default_RSA();
-    ENGINE_init(rsaEngine);
+    ENGINE * rsaEngine = ENGINE_new();
+    //ENGINE_get_default_RSA();
+    int eng_init_result = ENGINE_init(rsaEngine);
+    if (eng_init_result == 0)
+        NSLog(@"EMTG - Error initializing the rsaEngine");
 
     rsaKey->engine = rsaEngine;
 
     BIGNUM *n_bn = NULL, *e_bn = NULL;
-    BIGNUM *d = NULL, *p = NULL, *q = NULL;
+    //BIGNUM *d = NULL, *p = NULL, *q = NULL;
 
     e_bn = BN_new();
     n_bn = BN_new();
 
-    //NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
-    NSString * nzu = @"ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ";
+    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
+    //NSString * nzu = @"ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ";
 
     NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
     //NSString * ezu = @"AQAB";
 
-    NSLog(@"EMTG - load param n: \n%@", nzu);
-    NSLog(@"EMTG - load param e: \n%@", ezu);
-
-    //StringSource ss1(nz, true, new Base64Decoder(new StringSink(nn)));
     NSString *nz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:nzu];
     NSData *nn = [[NSData alloc]
                                initWithBase64EncodedString:nz
@@ -87,13 +85,18 @@ static inline char itoh(int i) {
     NSData *en = [[NSData alloc]
                   initWithBase64EncodedString:ez
                   options:0];
+    
+    NSLog(@"EMTG - load param n: \n%@", nz);
+    NSLog(@"EMTG - load param e: \n%@", ez);
 
     NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
     NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
 
     NSString * ehexString = [self NSDataToHex:en];
-    NSString * nhexString = [self NSDataToHex:nn];
     NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
+    
+    NSString * nhexString = [self NSDataToHex:nn];
+    NSLog(@"EMTG - nn converted to hexadecimal: %@", nhexString);
 
     const char *e_char = [ehexString UTF8String];
     const char *n_char = [nhexString UTF8String];
@@ -106,44 +109,31 @@ static inline char itoh(int i) {
     rsaKey->n = n_bn;
 
     int rc = RSA_check_key(rsaKey);
-    long err = ERR_get_error();
+    //long err = ERR_get_error();
     if(rc != 1) {
-        //cerr << "RSA_check_key failed, error 0x" << std::hex << err << endl;
         NSLog(@"RSA_check_key failed, error 0x");
         //return nil; //exit(1);
     }
 
-    NSString * tmpFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
-
-    NSLog(@"EMTG - Temporary File Path: %@", tmpFilePath);
-
-    FILE *tmpPEMFile = fopen([tmpFilePath cStringUsingEncoding:NSASCIIStringEncoding], "rw");
+    NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
+    FILE *tmpPEMFile = fopen([tmpPEMFilePath cStringUsingEncoding:NSASCIIStringEncoding], "w+");
     int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey);
-    NSLog(@"EMTG - conversion result form RSA to PEM: %d", res_conversion);
-
-    // read the contents into a string
-    NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpFilePath encoding:NSUTF8StringEncoding error:nil];
     fclose(tmpPEMFile);
-    // display our file
-    NSLog(@"EMTG - PEM String content: \n%@", pemStr);
-
-    //NSInteger n((byte*)nn.data(), nn.size())
-
-    //int rc = BN_dec2bn(&n, nz);
-    /*if(rc == 0 || n == NULL) {
-        NSLog(@"BN_dec2bn failed for n", jsonError);
-        cerr << "BN_dec2bn failed for n" << endl;
-        exit(1);
-    }
-    rsa->n = n;*/
-    //rsaItem->n = B
-
-    RSA * rsaMethod = RSA_new_method(rsaEngine);
+    NSLog(@"EMTG - conversion result form RSA to PEM: %d", res_conversion);
+    
+    // read the contents into a string
+    NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
+    //NSLog(@"EMTG - PEM String content:\n%@", pemStr);
+    NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END RSA PUBLIC KEY-----"][0];
+    //NSLog(@"EMTG - PEM String content1:\n%@", pem1);
+    NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN RSA PUBLIC KEY-----\n"][1];
+    
+    NSLog(@"EMTG - PEM String result:\n%@", pemResult);
 
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
 
-    return nil;
+    return pemStr;
 }
 
 +(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
@@ -186,6 +176,13 @@ static inline char itoh(int i) {
     NSString *payloadStr64url = [payloadArray objectAtIndex:1];
     return [MF_Base64Codec base64StringFromBase64UrlEncodedString:payloadStr64url];
 }
+
++(NSString *) getJWTPayloadB64WithJWTDocument:(NSString *)jwtDocument {
+    NSArray *payloadArray = [jwtDocument componentsSeparatedByString:@"."];
+    NSString *payloadStr64url = [payloadArray objectAtIndex:1];
+    return payloadStr64url;
+}
+
 
 + (NSDictionary *) deserializationJSONObjectWithString:(NSString *)jsonString {
     NSError *jsonError = nil;
@@ -285,6 +282,9 @@ static inline char itoh(int i) {
 
 + (BOOL) verifySignatureWithFed_ms_jwt:(NSString *)fed_ms_jwt validKeys:(NSDictionary *)validKeys {
     NSDictionary *header = [self getHeaderDictioryFromJWTString:fed_ms_jwt];
+    NSString *payload = [self getJWTPayloadB64WithJWTDocument:fed_ms_jwt];
+    //NSString *payload = [self getJWTPayloadStringWithJWTDocument:fed_ms_jwt];
+    
     NSLog(@"EMTG - verifySignatureWithFed_ms_jwt - header: \n%@", header.debugDescription);
 
     NSString *kid = [header objectForKey:@"kid"];
@@ -313,33 +313,31 @@ static inline char itoh(int i) {
     NSString * pemPublicKey =  [self convertFromJWKtoPEM:publicKey];
 
     // extract keys
-    //NSString *privateKey = //extract from JWK dictionary//;
-    // and put them into appropriate key.
-    // pass nil parameters
-    NSDictionary *parameters = nil;
-    NSError *theError = nil;
+    //NSString *privateKey = ...;//extract from JWK dictionary and put them into appropriate key.
+    
+    NSDictionary *parameters = nil;     // pass nil parameters
+    //NSError *theError = nil;
     //NSError **error = &theError;
-    NSError *__autoreleasing*error;
+    NSError *__autoreleasing*error = NULL;
 
     //id privateJWTKey = [[JWTCryptoKeyPrivate alloc] initWithBase64String:(NSString *)privateKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
-    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:(NSString *)publicKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
+    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:pemPublicKey parameters:parameters error:error];
 
-    /*id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].verifyKey(pemPublicKey);
-
-    JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:fed_ms_jwt].addHolder(verifyDataHolder);
-    JWTCodingResultType *verifyResult = verifyBuilder.result;
+    id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor publicKeyWithPEMBase64].type).algorithmName(algorithmName).secret(publicJWTKey);
  
+    JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:payload].addHolder(verifyDataHolder);
+    JWTCodingResultType *verifyResult = verifyBuilder.result;
     if (verifyResult.successResult) {
         // success
-        NSLog(@"EMTG - %@ success: %@", self.debugDescription, verifyResult.successResult.payload);
-        //token = verifyResult.successResult.encoded;
+        NSLog(@"%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        payload = verifyResult.successResult.encoded;
         return YES;
-    } else {
-        // error
-        NSLog(@"EMTG - %@ error: %@", self.debugDescription, verifyResult.errorResult.error);
-        return NO;
     }
-    */
+    else {
+        // error
+        NSLog(@"%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
+    }
+    
     return NO;
 }
 
@@ -416,7 +414,7 @@ static inline char itoh(int i) {
     NSString *inner_ms_jwt = [self getMetadataStatementWithJSONDocument:payload fed_OP:fed_op];
 
     /* This will hold the result of the verification/decoding/flattening */
-    NSMutableDictionary *result;
+    NSDictionary *result;
 
     /* If there are more MSs, recursively analyzed them and return the flattened version
      * with the inner payload */
