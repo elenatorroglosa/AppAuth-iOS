@@ -70,8 +70,10 @@ static inline char itoh(int i) {
     e_bn = BN_new();
     n_bn = BN_new();
 
-    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
+    //NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
     //NSString * nzu = @"ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ";
+    NSString * nzu = @"m7eORDSxWXghhOvlpWWiW86xGl5dXAWKKEVV7NOSNWM-T9KMMf0qn9wWAJ3ncOi51Bx9K47S7AFNeODb1T1FAFcr4wa95SauUTsUECWEV2HmV6maon6HHdi_y11RArsLyA_-pg3I0-wdmOBeavijnKlngMMZgbyU0lqbGsM8xWP0mwN7eho8fsvSlja-lM9icQmE6Oh5Vfe6E-Ci-enCgmQRLqQSCMte8o6i9Y5JaAbbyiMLPtlRUVnlWKKetw1SXWuxj8XOegBivkjxvBdnn8L28m2bo6INKuyLBG-uK2V-fwlqjFozpLL0z3xicElXqgRJ57jVQlvGSz2A2LIAzQ==";
+
 
     NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
     //NSString * ezu = @"AQAB";
@@ -108,31 +110,38 @@ static inline char itoh(int i) {
     rsaKey->e = e_bn;
     rsaKey->n = n_bn;
 
-    int rc = RSA_check_key(rsaKey);
-    //long err = ERR_get_error();
-    if(rc != 1) {
-        NSLog(@"RSA_check_key failed, error 0x");
-        //return nil; //exit(1);
-    }
+    ////////// DELETE - DEBUG //////////
+    NSString * tmpRSAFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
+    FILE *tmpRSAFile = fopen([tmpRSAFilePath cStringUsingEncoding:NSUTF8StringEncoding], "w+");
+
+    int rsa_print = RSA_print_fp(tmpRSAFile, rsaKey, 0);
+    fclose(tmpRSAFile);
+    NSString * fileContents = [NSString stringWithContentsOfFile:tmpRSAFilePath encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"EMTG - RSA_print_fp:\n%@", fileContents);
+    /////////////////
 
     NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
-    FILE *tmpPEMFile = fopen([tmpPEMFilePath cStringUsingEncoding:NSASCIIStringEncoding], "w+");
-    int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey);
+    FILE *tmpPEMFile = fopen([tmpPEMFilePath cStringUsingEncoding:NSUTF8StringEncoding], "w+");
+
+    //int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey);
+    int res_conversion = PEM_write_RSA_PUBKEY(tmpPEMFile, rsaKey);
+
     fclose(tmpPEMFile);
     NSLog(@"EMTG - conversion result form RSA to PEM: %d", res_conversion);
-    
+
     // read the contents into a string
     NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
-    //NSLog(@"EMTG - PEM String content:\n%@", pemStr);
-    NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END RSA PUBLIC KEY-----"][0];
-    //NSLog(@"EMTG - PEM String content1:\n%@", pem1);
-    NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN RSA PUBLIC KEY-----\n"][1];
+    NSLog(@"EMTG - PEM String content:\n%@", pemStr);
     
-    NSLog(@"EMTG - PEM String result:\n%@", pemResult);
+    //NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END PUBLIC KEY-----"][0];
+    //NSLog(@"EMTG - PEM String content1:\n%@", pem1);
+    //NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN PUBLIC KEY-----\n"][1];
+    //NSLog(@"EMTG - PEM String result:\n%@", pemResult);
 
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
 
+    //return pemResult; //<-- exception of type NSException
     return pemStr;
 }
 
