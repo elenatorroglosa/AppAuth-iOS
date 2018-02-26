@@ -133,16 +133,16 @@ static inline char itoh(int i) {
     NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
     NSLog(@"EMTG - PEM String content:\n%@", pemStr);
     
-    //NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END PUBLIC KEY-----"][0];
+    NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END PUBLIC KEY-----"][0];
     //NSLog(@"EMTG - PEM String content1:\n%@", pem1);
-    //NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN PUBLIC KEY-----\n"][1];
+    NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN PUBLIC KEY-----\n"][1];
     //NSLog(@"EMTG - PEM String result:\n%@", pemResult);
 
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
 
-    //return pemResult; //<-- exception of type NSException
-    return pemStr;
+    return pemResult; //<-- exception of type NSException
+    //return pemStr;
 }
 
 +(NSDictionary *) getJSONfronStringWithString:(NSString *) jsonString {
@@ -303,7 +303,6 @@ static inline char itoh(int i) {
     NSLog(@"EMTG - print header params alg: %@ and kid: %@", alg, kid);
 
     //NSString *publicKey = nil;
-
     /*NSArray * keysArray = [validKeys objectForKey:@"keys"];
     for (NSDictionary *keyDic in keysArray) {
         NSString *value = [keyDic valueForKey:@"kid"];
@@ -325,29 +324,46 @@ static inline char itoh(int i) {
     //NSString *privateKey = ...;//extract from JWK dictionary and put them into appropriate key.
     
     NSDictionary *parameters = nil;     // pass nil parameters
-    //NSError *theError = nil;
-    //NSError **error = &theError;
-    NSError *__autoreleasing*error = NULL;
+    NSError *__autoreleasing*error = nil;
 
-    //id privateJWTKey = [[JWTCryptoKeyPrivate alloc] initWithBase64String:(NSString *)privateKey parameters:(NSDictionary *)parameters error:(NSError *__autoreleasing*)error];
-    id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:pemPublicKey parameters:parameters error:error];
-
-    id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor publicKeyWithPEMBase64].type).algorithmName(algorithmName).secret(publicJWTKey);
+    /*id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:pemPublicKey parameters:parameters error:error];
+    //id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithPemEncoded:pemPublicKey parameters:parameters error:error]; // Uncaught exception of type NSException
+    if (error == nil)
+        NSLog(@"EMTG - error parsing the public key pem string:\n %@", error );
+    else
+        NSLog(@"EMTG - key extraction without errors.");*/
  
-    JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:payload].addHolder(verifyDataHolder);
+    id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor publicKeyWithPEMBase64].type).algorithmName(algorithmName).secret(pemPublicKey);
+
+    JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:fed_ms_jwt].addHolder(verifyDataHolder);
+    
+    NSLog(@"EMTG - token:\n%@\n\n", fed_ms_jwt);
+
     JWTCodingResultType *verifyResult = verifyBuilder.result;
     if (verifyResult.successResult) {
         // success
-        NSLog(@"%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        NSLog(@"\n%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
         payload = verifyResult.successResult.encoded;
         return YES;
     }
     else {
         // error
-        NSLog(@"%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
+        NSLog(@"\n%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
     }
-    
     return NO;
+    
+    /*JWTBuilder *decodeBuilder = [JWTBuilder decodeMessage:fed_ms_jwt].secret(pemPublicKey).algorithmName(alg);
+     NSDictionary *envelopedPayload = decodeBuilder.decode;
+     
+     NSLog(@"EMTG - decoded payload: %@", envelopedPayload.debugDescription);
+     
+     if (envelopedPayload != nil) {
+     NSLog(@"EMTG - success");
+     return YES;
+     }
+     NSLog(@"EMTG - error verifying signature");
+     return NO;*/
+    
 }
 
 +(NSString *) getMetadataStatementWithJSONDocument:(NSDictionary *)jsonDoc fed_OP:(NSString *) fed_OP {
@@ -479,7 +495,7 @@ static inline char itoh(int i) {
     //NSArray *fedetatedOPs = [metadataStatement allKeys];
     for (NSString* fed_op in rootKeys.allKeys) {
         NSLog(@"EMTG - Looking for a valid metada_statement for %@", fed_op);
-        //NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
+        NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
 
         // TODO: String ms_jwt = getMetadataStatement(unsigned_ms, fed_op);
 
