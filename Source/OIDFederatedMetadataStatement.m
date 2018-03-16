@@ -51,7 +51,7 @@ static inline char itoh(int i) {
                                     freeWhenDone:YES];
 }
 
-+(NSString *) convertFromJWKtoPEM: (NSDictionary *)jwk {
++(NSString *) convertFromJWKtoPEM_PublicKey: (NSDictionary *)jwk {
 
     NSLog(@"EMTG - starting convertFromJWKtoPEM");
     RSA * rsaKey = RSA_new();
@@ -70,13 +70,8 @@ static inline char itoh(int i) {
     e_bn = BN_new();
     n_bn = BN_new();
 
-    //NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
-    //NSString * nzu = @"ofgWCuLjybRlzo0tZWJjNiuSfb4p4fAkd_wWJcyQoTbji9k0l8W26mPddxHmfHQp-Vaw-4qPCJrcS2mJPMEzP1Pt0Bm4d4QlL-yRT-SFd2lZS-pCgNMsD1W_YpRPEwOWvG6b32690r2jZ47soMZo9wGzjb_7OMg0LOL-bSf63kpaSHSXndS5z5rexMdbBYUsLA9e-KXBdQOS-UTo7WTBEMa2R2CapHg665xsmtdVMTBQY4uDZlxvb3qCo5ZwKh9kG4LT6_I5IhlJH7aGhyxXFvUK-DWNmoudF8NAco9_h9iaGNj8q2ethFkMLs91kzk2PAcDTW9gb54h4FRWyuXpoQ";
-    NSString * nzu = @"m7eORDSxWXghhOvlpWWiW86xGl5dXAWKKEVV7NOSNWM-T9KMMf0qn9wWAJ3ncOi51Bx9K47S7AFNeODb1T1FAFcr4wa95SauUTsUECWEV2HmV6maon6HHdi_y11RArsLyA_-pg3I0-wdmOBeavijnKlngMMZgbyU0lqbGsM8xWP0mwN7eho8fsvSlja-lM9icQmE6Oh5Vfe6E-Ci-enCgmQRLqQSCMte8o6i9Y5JaAbbyiMLPtlRUVnlWKKetw1SXWuxj8XOegBivkjxvBdnn8L28m2bo6INKuyLBG-uK2V-fwlqjFozpLL0z3xicElXqgRJ57jVQlvGSz2A2LIAzQ==";
-
-
+    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
     NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
-    //NSString * ezu = @"AQAB";
 
     NSString *nz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:nzu];
     NSData *nn = [[NSData alloc]
@@ -315,10 +310,11 @@ static inline char itoh(int i) {
     NSDictionary * publicKey = [validKeys valueForKey:kid];
     if (publicKey == nil) {
         NSLog(@"EMTG - ERROR: public key not found for kid: %@", kid);
+        return NO;
     }
-    NSLog(@"EMTG - public key found for kid: %@", kid);
+    NSLog(@"EMTG - public KEY FOUND for kid: %@", kid);
 
-    NSString * pemPublicKey =  [self convertFromJWKtoPEM:publicKey];
+    NSString * pemPublicKey =  [self convertFromJWKtoPEM_PublicKey:publicKey];
 
     // extract keys
     //NSString *privateKey = ...;//extract from JWK dictionary and put them into appropriate key.
@@ -349,8 +345,8 @@ static inline char itoh(int i) {
     else {
         // error
         NSLog(@"\n%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
+        return NO;
     }
-    return NO;
     
     /*JWTBuilder *decodeBuilder = [JWTBuilder decodeMessage:fed_ms_jwt].secret(pemPublicKey).algorithmName(alg);
      NSDictionary *envelopedPayload = decodeBuilder.decode;
@@ -403,6 +399,7 @@ static inline char itoh(int i) {
 }
 
 +(NSMutableDictionary *) addKeysFromArrayToDic:(NSMutableDictionary *)keyDict keyArray:(NSArray *) keyArray {
+
     if (keyDict == nil)
         keyDict = [[NSMutableDictionary alloc] init];
 
@@ -423,7 +420,7 @@ static inline char itoh(int i) {
 
     //System.out.println("Inspecting MS signed by: " + payload.getString("iss") + " with KID:" + signedJWT.getHeader().getKeyID());
 
-    NSDictionary *keys = rootKeys;
+    NSMutableDictionary *keys = nil;
     NSString *payload_str = [self getJWTPayloadStringWithJWTDocument:fed_ms_jwt];
     NSDictionary *payload = [self deserializationJSONObjectWithString:payload_str];
 
@@ -445,12 +442,12 @@ static inline char itoh(int i) {
      * with the inner payload */
     if (inner_ms_jwt != nil) {
         /* Recursion here to get a verified and flattened version of inner_ms */
-        //JSONObject inner_ms_flattened = verifyMetadataStatement(inner_ms_jwt, fed_op, root_keys);
         NSDictionary *inner_ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:inner_ms_jwt fed_OP:fed_op rootKeys:rootKeys];
 
         if (inner_ms_flattened) {
             /* add signing keys */
-            //TODO: keys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString());
+            // keys = JWKSet.parse(inner_ms_flattened.getJSONObject("signing_keys").toString()); <-- move after verification
+            keys = [self addKeysFromArrayToDic:keys keyArray:[[inner_ms_flattened objectForKey:@"signing_keys"] objectForKey:@"keys"]];
             result = [self flattenWithUpper:payload lower:inner_ms_flattened];
         } else {
             NSLog(@"EMTG - verifyMetadataStatementWithFed_ms_jwt: Error at the flattened process");
@@ -462,11 +459,11 @@ static inline char itoh(int i) {
     else {
         //TODO: keys = JWKSet.parse(root_keys.getJSONObject(fed_op).toString());
 
-        keys = [self addKeysFromArrayToDic:nil keyArray:[[rootKeys objectForKey:fed_op] objectForKey:@"keys"]];
+        keys = [self addKeysFromArrayToDic:keys keyArray:[[rootKeys objectForKey:fed_op] objectForKey:@"keys"]];
         result = payload;
     }
     
-    /* verify the signature using the collected keys */
+    /* if the flattened process is completed (successfully) verify the signature using the collected keys */
     if (result) {
         NSLog(@"EMTG - Completed flattened process of fed_ms_st.");
     
@@ -495,7 +492,7 @@ static inline char itoh(int i) {
     //NSArray *fedetatedOPs = [metadataStatement allKeys];
     for (NSString* fed_op in rootKeys.allKeys) {
         NSLog(@"EMTG - Looking for a valid metada_statement for %@", fed_op);
-        NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
+        //NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
 
         // TODO: String ms_jwt = getMetadataStatement(unsigned_ms, fed_op);
 
