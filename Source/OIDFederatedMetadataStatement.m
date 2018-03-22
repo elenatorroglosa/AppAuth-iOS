@@ -82,17 +82,15 @@ static inline char itoh(int i) {
     NSData *en = [[NSData alloc]
                   initWithBase64EncodedString:ez
                   options:0];
+
+    NSString * ehexString = [self NSDataToHex:en];
+    NSString * nhexString = [self NSDataToHex:nn];
     
     NSLog(@"EMTG - load param n: \n%@", nz);
     NSLog(@"EMTG - load param e: \n%@", ez);
-
     NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
     NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
-
-    NSString * ehexString = [self NSDataToHex:en];
     NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
-    
-    NSString * nhexString = [self NSDataToHex:nn];
     NSLog(@"EMTG - nn converted to hexadecimal: %@", nhexString);
 
     const char *e_char = [ehexString UTF8String];
