@@ -666,6 +666,61 @@ static inline char itoh(int i) {
         return nil;
     }
 }
+
+/**
+ * Sings a document using the first RSA key for signature in signing_keys, using RS256 (must be a RSA key)
+ * @param document Document to be signed
+ * @param signing_keys Signing key (JWKS)
+ * @param iss Name of the issuer for the "iss" claim
+ * @return A serialized signed JWT
+ * @throws InvalidStatementException If something goes wrong
+ */
++ (NSMutableDictionary *) signWithDocument:(NSMutableDictionary *) document
+                          signing_keys:(NSMutableDictionary *) signing_keys
+                                   iss:(NSString *) iss
+{
+    //document.put("iss", iss);
+    [document setObject:iss forKey:@"iss"];
+    // Expires in 15 minutes
+    //document.put("exp", new Date().getTime() + 60 * 15);
+    NSNumber *expirationDate = [NSNumber numberWithDouble:([[NSDate date] timeIntervalSince1970] + 60 * 15)];
+    NSLog(@"EMTG - singDcoument %d", expirationDate.unsignedIntValue);
+    [document setObject:[expirationDate stringValue] forKey:@"exp"];
+
+    /*try {
+        //JWKSet jwkSet = JWKSet.parse(signing_keys.toString());
+        List<JWK> matches = new JWKSelector(new JWKMatcher.Builder()
+                                            .keyType(KeyType.RSA)
+                                            .keyUse(KeyUse.SIGNATURE)
+                                            .build())
+        .select(jwkSet);
+
+        if (matches.size() == 0)
+            throw new InvalidStatementException("No signing RSA key found!");
+
+        JWK key = matches.get(0);
+        RSAPrivateKey privateKey = RSAKey.parse(key.toString()).toRSAPrivateKey();
+
+        // Create RSA-signer with the private key
+        JWSSigner signer = new RSASSASigner(privateKey);
+
+        // Prepare JWS object with simple string as payload
+        JWSObject jwsObject = new JWSObject(
+                                            new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(),
+                                            new Payload(document.toString()));
+
+        // Compute the RSA signature
+        jwsObject.sign(signer);
+        return jwsObject.serialize();
+    } catch (JOSEException | ParseException e) {
+        throw new InvalidStatementException(e.toString());
+    }*/
+    return nil;
+}
+
+
+
+
 /**
  * Generates the top level (MSn) metadata_statements JSON object, to be included into the unsigned docoment
  * @param unsigned_ms Document to be signed
