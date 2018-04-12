@@ -666,4 +666,42 @@ static inline char itoh(int i) {
         return nil;
     }
 }
+/**
+ * Generates the top level (MSn) metadata_statements JSON object, to be included into the unsigned docoment
+ * @param unsigned_ms Document to be signed
+ * @param sms Signed metadata statements of inferior level (MSn-1)
+ * @param signing_keys Signing keys
+ * @param iss Name of the issuer
+ * @return A JSONObject with the collection of Signed MS by this entity
+ * @throws InvalidStatementException When something goes wrong.
+ */
++ (NSDictionary *) genFederatedConfigurationUnsigned_ms:(NSDictionary *)unsigned_ms
+                                                    sms:(NSDictionary *)sms
+                                           signing_keys:(NSDictionary *)signing_keys
+                                                    iss:(NSString *) iss
+{
+    // Object to contain the signed metadata statements
+    NSMutableDictionary * top_level_sms = [[NSMutableDictionary alloc] init];
+    // Iterate over the SMS FOs
+    //  for (Iterator<String> it = sms.keys(); it.hasNext(); ) {
+    for (NSString* fed_op  in sms) {
+        id value = [sms objectForKey:fed_op];
+        // copy unsigned MS (to avoid modifying it)
+        NSMutableDictionary * to_be_signed = [unsigned_ms mutableCopy];
+        // create the metadata_statements claim
+        //to_be_signed.put("metadata_statements", new JSONObject());
+        NSMutableDictionary * mutDic_MS = [[NSMutableDictionary alloc] init];
+        // add the narrowed SMS to the claim
+        //to_be_signed.getJSONObject("metadata_statements").put(fed_op, sms.getString(fed_op));
+        [mutDic_MS setObject:[sms objectForKey:fed_op] forKey:fed_op];
+        [to_be_signed setObject:mutDic_MS forKey:@"metadata_statements"];
+        // sign
+        //String signed = sign(to_be_signed, signing_keys, iss);
+        NSDictionary * signedJSON = [self signWithDocument:to_be_signed signing_keys:signing_keys iss:iss];
+        // Add this to the collection
+        [top_level_sms setObject:signedJSON forKey:fed_op];
+        //top_level_sms.put(fed_op, signed);
+    }
+    return top_level_sms;
+}
 @end
