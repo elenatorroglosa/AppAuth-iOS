@@ -51,6 +51,136 @@ static inline char itoh(int i) {
                                     freeWhenDone:YES];
 }
 
++(NSString *) convertFromJWKtoPEM_PrivateKey: (NSDictionary *)jwk {
+
+    NSLog(@"EMTG - starting convertFromJWKtoPEM_PrivateKey");
+    RSA * rsaKey = RSA_new();
+
+    ENGINE * rsaEngine = ENGINE_new();
+    //ENGINE_get_default_RSA();
+    int eng_init_result = ENGINE_init(rsaEngine);
+    if (eng_init_result == 0)
+        NSLog(@"EMTG - Error initializing the rsaEngine");
+
+    rsaKey->engine = rsaEngine;
+
+    BIGNUM *n_bn = NULL, *e_bn = NULL;
+    BIGNUM *d_bn = NULL, *p_bn = NULL, *q_bn = NULL;
+
+    e_bn = BN_new();
+    n_bn = BN_new();
+    d_bn = BN_new();
+    p_bn = BN_new();
+    q_bn = BN_new();
+
+    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
+    NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
+    NSString * dzu = [jwk objectForKey:@"d"]; // private exponent
+    NSString * pzu = [jwk objectForKey:@"p"]; // secret prime factor
+    NSString * qzu = [jwk objectForKey:@"q"]; // secret prime factor
+
+    NSString *nz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:nzu];
+    NSData *nn = [[NSData alloc]
+                  initWithBase64EncodedString:nz
+                  options:0];
+
+    NSString *ez = [MF_Base64Codec base64StringFromBase64UrlEncodedString:ezu];
+    NSData *en = [[NSData alloc]
+                  initWithBase64EncodedString:ez
+                  options:0];
+
+    NSString *dz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:dzu];
+    NSData *dn = [[NSData alloc]
+                  initWithBase64EncodedString:dz
+                  options:0];
+
+    NSString *pz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:pzu];
+    NSData *pn = [[NSData alloc]
+                  initWithBase64EncodedString:pz
+                  options:0];
+
+    NSString *qz = [MF_Base64Codec base64StringFromBase64UrlEncodedString:qzu];
+    NSData *qn = [[NSData alloc]
+                  initWithBase64EncodedString:qz
+                  options:0];
+
+    NSString * ehexString = [self NSDataToHex:en];
+    NSString * nhexString = [self NSDataToHex:nn];
+    NSString * dhexString = [self NSDataToHex:dn];
+    NSString * phexString = [self NSDataToHex:pn];
+    NSString * qhexString = [self NSDataToHex:qn];
+
+    NSLog(@"EMTG - load param n: \n%@", nz);
+    NSLog(@"EMTG - load param e: \n%@", ez);
+    NSLog(@"EMTG - load param d: \n%@", dz);
+    NSLog(@"EMTG - load param d: \n%@", pz);
+    NSLog(@"EMTG - load param d: \n%@", qz);
+    NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
+    NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
+    NSLog(@"EMTG - dn converted from b64urlformat: %@", dn.debugDescription);
+    NSLog(@"EMTG - dn converted from b64urlformat: %@", pn.debugDescription);
+    NSLog(@"EMTG - dn converted from b64urlformat: %@", qn.debugDescription);
+    NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
+    NSLog(@"EMTG - nn converted to hexadecimal: %@", nhexString);
+    NSLog(@"EMTG - dn converted to hexadecimal: %@", dhexString);
+    NSLog(@"EMTG - dn converted to hexadecimal: %@", phexString);
+    NSLog(@"EMTG - dn converted to hexadecimal: %@", qhexString);
+
+    const char *e_char = [ehexString UTF8String];
+    const char *n_char = [nhexString UTF8String];
+    const char *d_char = [dhexString UTF8String];
+    const char *p_char = [phexString UTF8String];
+    const char *q_char = [qhexString UTF8String];
+
+    //int BN_hex2bn(BIGNUM **a, const char *str);
+    int res1 = BN_hex2bn(&e_bn, e_char);
+    int res2 = BN_hex2bn(&n_bn, n_char);
+    int res3 = BN_hex2bn(&d_bn, d_char);
+    int res4 = BN_hex2bn(&p_bn, p_char);
+    int res5 = BN_hex2bn(&q_bn, q_char);
+
+    rsaKey->e = e_bn;
+    rsaKey->n = n_bn;
+    rsaKey->d = d_bn;
+    rsaKey->p = p_bn;
+    rsaKey->q = q_bn;
+
+    ////////// DELETE - DEBUG //////////
+    NSString * tmpRSAFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
+    FILE *tmpRSAFile = fopen([tmpRSAFilePath cStringUsingEncoding:NSUTF8StringEncoding], "w+");
+
+    int rsa_print = RSA_print_fp(tmpRSAFile, rsaKey, 0);
+    fclose(tmpRSAFile);
+    NSString * fileContents = [NSString stringWithContentsOfFile:tmpRSAFilePath encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"EMTG - RSA_print_fp:\n%@", fileContents);
+    /////////////////
+
+    NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
+    FILE *tmpPEMFile = fopen([tmpPEMFilePath cStringUsingEncoding:NSUTF8StringEncoding], "w+");
+
+    //int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey); <--- wrong for public conversion
+    //int res_conversion = PEM_write_RSA_PUBKEY(tmpPEMFile, rsaKey); <-- right for public conversion
+    //int res_conversion = PEM_write_RSAPrivateKey(tmpPEMFile, rsaKey, const EVP_CIPHER *enc, unsigned char *kstr, int klen, pem_password_cb *cb, void *u);
+    int res_conversion = PEM_write_RSAPrivateKey(tmpPEMFile, rsaKey, nil, nil, 0, nil, nil);
+
+    fclose(tmpPEMFile);
+    NSLog(@"EMTG - conversion result form RSA to PEM (private key): %d", res_conversion);
+
+    // read the contents into a string
+    NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
+    NSLog(@"EMTG - PEM Private String content:\n%@", pemStr);
+
+    NSString * pemResult = [pemStr componentsSeparatedByString:@"-----"][2]; //TODO have in mind possible fails related to '\n'
+    NSLog(@"EMTG - PEM Private String result:\n%@", pemResult);
+
+    ENGINE_finish(rsaEngine);
+    RSA_free(rsaKey);
+
+    return pemResult; //<-- exception of type NSException
+    //return pemStr;
+}
+
+
 +(NSString *) convertFromJWKtoPEM_PublicKey: (NSDictionary *)jwk {
 
     NSLog(@"EMTG - starting convertFromJWKtoPEM");
