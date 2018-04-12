@@ -242,15 +242,15 @@ NS_ASSUME_NONNULL_BEGIN
              {
                  NSDictionary *dicDiscoveryDocument = objectDiscoveryDocument;
 
-                 NSString *rootKeysPath = [[NSBundle mainBundle] pathForResource:@"rootkeys" ofType:@"json"];
-                 if (!rootKeysPath) {
-                     NSLog(@"EMTG - Not found federation RootKeys file, so continue without federation.");
+                 NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:@"fed_config" ofType:@"json"];
+                 if (!federationConfigPath) {
+                     NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
                  } else {
-                     NSLog(@"EMTG - path: %@",rootKeysPath);
+                     NSLog(@"EMTG - path: %@",federationConfigPath);
 
-                     NSData *jsonRootKeysData = [NSData dataWithContentsOfFile:rootKeysPath];
-                     id objectRootKeysDocument = [NSJSONSerialization
-                                                   JSONObjectWithData:jsonRootKeysData
+                     NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
+                     id objectfederationConfigDocument = [NSJSONSerialization
+                                                   JSONObjectWithData:jsonfederationConfigData
                                                    options:0
                                                    error:&jsonError];
 
@@ -258,11 +258,12 @@ NS_ASSUME_NONNULL_BEGIN
                          // JSON was malformed, act appropriately here
                      }
 
-                     if(![objectRootKeysDocument isKindOfClass:[NSDictionary class]])
+                     if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
                      {
                          NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
                      }
-                     NSDictionary *dictionaryRootKeys = objectRootKeysDocument;
+                     NSDictionary *dictionaryfederationConfig = objectfederationConfigDocument;
+                     NSDictionary *dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];
                      //NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
                      //NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
 

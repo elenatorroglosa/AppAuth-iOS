@@ -1,0 +1,41 @@
+{
+    "metadata_statements": {
+        "https://swamid.sunet.se": "eyJhbGciOiJSUzI1NiIsImtpZCI6IlpiWXpZNnNBMy0wb2ZoSUxYMWd6aWdCNDNaUEs1U21LYk9iVkhpNDR1ZGsifQ.eyJraWQiOiAiWmJZelk2c0EzLTBvZmhJTFgxZ3ppZ0I0M1pQSzVTbUtiT2JWSGk0NHVkayIsICJpc3MiOiAiaHR0cHM6Ly9zd2FtaWQuc2UvIiwgInNpZ25pbmdfa2V5cyI6IHsia2V5cyI6IFt7InVzZSI6ICJzaWciLCAiZSI6ICJBUUFCIiwgImtpZCI6ICJESUVhbGh3RUttYWxabGp0Z1ZIZFdxb2JBbkJoTHBqbk1kR3c5eUZOTkVzIiwgIm4iOiAicVdIUTdLN3NWTldiNFFaZTJURmREZU9IM3p3WVZVOGFHV2toOUttVVNhZHBCTHBXaGVnMGpoQXg5djktNjdjTi15SnhITTAyU09RbWdoazNhRktHX3UzOXRtM3J4R0xybEVNSWlyVVRZOVo2MG9hTTlOT1Y5UTBaNXNTZE5JTGZlTWNaMDFNckhscUpDX0lqVFBBTlB5aG4zaTJXNFpsZ25tUUx2dlV2cFVEd1lleE9CMzNlX0RaZjY0T1c3RE9qaDJxbE5oVFl4eG8zZktKQUEtQ19kQ0w1SUhMNVRXWUhybFVMTzdiVklpc2ZsVU5qaHlmRVdjZlJCOF9YZk4yLTJOY0Jhd3AtT0lielBwaWszbVZOS3VJWWNmN0pqVktnY0pQN0RZdnpDR3lvcGxUUU9yY2VrU0lPNlVoWHFjNERkOHRuMGxYUklQQlYxbmR2ellGZTZ3IiwgImt0eSI6ICJSU0EifSwgeyJraWQiOiAiaHVicV9PQ2M5eHJXSC1NMVk3MTVNRzdmY2xQM2ZHb3hKV1daM1JuN0pCNCIsICJ5IjogIkFhSnFGYzFlUGpOZE1aa2FUSFJ2RGhKMHdfVVBsRExPSUJ3eXg0V1k1M1UiLCAidXNlIjogInNpZyIsICJrdHkiOiAiRUMiLCAieCI6ICJaYjgyLVhDcmttcEQtT3RxdVhpMHJXa29zMVh2SzU2UDFCT1VIWnFQVDYwIiwgImNydiI6ICJQLTI1NiJ9XX0sICJpYXQiOiAxNTIwOTQ5MTQzLCAianRpIjogIjBkYjQ4M2I2YzEwZTQwNWRhMmEwYjY4NjRiZmRkZjYzIiwgImV4cCI6IDE1MjA5NTI3NDN9.EE30SpZaQ7G8B0EIc92ylbDfU9vHBeUG5N_wWBLgsjsfoJWwuiSpoxOoKf9DL3WdaKIr9Ew0QnP_lyfxY4tqNA3MKYBHiP97m1ihxvMVP_kexN0gbwggbvGwQ8e6_ocalWgwJyi4z7rsn776O3OhoOWNjD--0feizSDS_UVGGwMbBRzYxKklkIFbCamcyX56TQLaBIL08Vg6NCfRNsiNOkGhHfeaRPP93WrgjS0UucLU8l_7-7laPnsET0zxC-25bwB4xbHIlPnHCfz6plRRmVWQqsEglA0FqKg7-8DfpD0v-NsCX-O16kWRPowX2JXoIwz9ibsK5irsLg8Bogi9Hg"
+    },
+    "authorized_keys": {
+        "https://swamid.sunet.se": {
+            "keys": [
+                     {
+                     "use": "sig",
+                     "n": "m7eORDSxWXghhOvlpWWiW86xGl5dXAWKKEVV7NOSNWM-T9KMMf0qn9wWAJ3ncOi51Bx9K47S7AFNeODb1T1FAFcr4wa95SauUTsUECWEV2HmV6maon6HHdi_y11RArsLyA_-pg3I0-wdmOBeavijnKlngMMZgbyU0lqbGsM8xWP0mwN7eho8fsvSlja-lM9icQmE6Oh5Vfe6E-Ci-enCgmQRLqQSCMte8o6i9Y5JaAbbyiMLPtlRUVnlWKKetw1SXWuxj8XOegBivkjxvBdnn8L28m2bo6INKuyLBG-uK2V-fwlqjFozpLL0z3xicElXqgRJ57jVQlvGSz2A2LIAzQ",
+                     "kid": "ZbYzY6sA3-0ofhILX1gzigB43ZPK5SmKbObVHi44udk",
+                     "e": "AQAB",
+                     "kty": "RSA"
+                     }
+                     ]
+        }
+    },
+    "signing_keys": {
+        "keys": [
+                 {
+                 "p": "yZnnC4tGxAeu7G-N-zxb8dOpHrk88VsXRoNH1sj54CIwj-y77amx4J6WCw_y7A9L_K3Fpn3Cbje5MNQJlizDLg8NdKWfC2yntkZD8SVEbU1EshDj8tWhMZSkKp3P7KM1ht1b8Okban9QNSnx-2y7Emtd2x78zjAFJt66yJGSx_k",
+                 "d": "KzmTm_rtw555d5ztEocm5Jb2gxDucsLLecWbDTlDZuJqifLVhrmhw8k9Pvenl5aw4jBBZmS2IDbc3uF5gs1gtujcELSPcJ__12ed4-vexWEkGdqNWSMvxwfvXrU5Gv_08Hj6zbORMt9OzvYdbRJrhv0UOJ4wvWSrQ_BrEPG4FXcJKuTFvQ4n2lckacmXlAgyZmAdeldU6C9s-st-vfJ25OabFVo8FyP7pa92KS-EgDTUTUJXqczNHYJbfWKVbAs9nBnDnU3ulE2pm48LHbgqeS2tejvIIIZ47bGRWudgbpeFamXPEf0Ow3AYNntTXCpKKdRN--XK5vAx2riw7LuWuQ",
+                 "q": "1xZNBiXqqgNuMNyw8YqS4ByN57XD00E9LH_HU54eL6sCkU6DM7Echpy2k5rIi6rs1_HxjS9pOcepqV4LE-0Q0_rwjGz7xWtZy0pCN1-nxWcHtC-BriBr2UE2_4VYIIo-UYVT3Vbyx8jyIWfJ_a4wiE083nGjf3OPvFP9ptZY_wM",
+                 "n": "qWHQ7K7sVNWb4QZe2TFdDeOH3zwYVU8aGWkh9KmUSadpBLpWheg0jhAx9v9-67cN-yJxHM02SOQmghk3aFKG_u39tm3rxGLrlEMIirUTY9Z60oaM9NOV9Q0Z5sSdNILfeMcZ01MrHlqJC_IjTPANPyhn3i2W4ZlgnmQLvvUvpUDwYexOB33e_DZf64OW7DOjh2qlNhTYxxo3fKJAA-C_dCL5IHL5TWYHrlULO7bVIisflUNjhyfEWcfRB8_XfN2-2NcBawp-OIbzPpik3mVNKuIYcf7JjVKgcJP7DYvzCGyoplTQOrcekSIO6UhXqc4Dd8tn0lXRIPBV1ndvzYFe6w",
+                 "kid": "DIEalhwEKmalZljtgVHdWqobAnBhLpjnMdGw9yFNNEs",
+                 "kty": "RSA",
+                 "use": "sig",
+                 "e": "AQAB"
+                 },
+                 {
+                 "x": "Zb82-XCrkmpD-OtquXi0rWkos1XvK56P1BOUHZqPT60",
+                 "d": "dtxazfvMdvV9XOPrpXXreQmFnMlW2fuAxs1pLE7Rl8A",
+                 "crv": "P-256",
+                 "kid": "hubq_OCc9xrWH-M1Y715MG7fclP3fGoxJWWZ3Rn7JB4",
+                 "y": "AaJqFc1ePjNdMZkaTHRvDhJ0w_UPlDLOIBwyx4WY53U",
+                 "use": "sig",
+                 "kty": "EC"
+                 }
+                 ]
+    }
+}
