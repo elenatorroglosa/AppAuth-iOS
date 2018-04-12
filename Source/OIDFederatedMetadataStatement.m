@@ -639,4 +639,31 @@ static inline char itoh(int i) {
     }
     return nil;
 }
+
++ (NSString *) signWithPayloadDocument:(NSDictionary *) payloadDictionary
+                  PrivateKeyPemString:(NSString *)privateKey
+                 privateKeyPassphrase:(NSString *)passphrase {
+
+    NSString *algorithmName = @"RS256";
+
+    id <JWTAlgorithmDataHolderProtocol> signDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor privateKeyWithPEMBase64].type).privateKeyCertificatePassphrase(passphrase).algorithmName(algorithmName).secret(privateKey);
+
+    // sign
+    // NSDictionary *payloadDictionary = @{@"hello": @"world"};
+
+    JWTCodingBuilder *signBuilder = [JWTEncodingBuilder encodePayload:payloadDictionary].addHolder(signDataHolder);
+    JWTCodingResultType *signResult = signBuilder.result;
+    NSString *token = nil;
+    if (signResult.successResult) {
+        // success
+        NSLog(@"EMTG - %@ success: %@", self.debugDescription, signResult.successResult.encoded);
+        token = signResult.successResult.encoded;
+        return token;
+    }
+    else {
+        // error
+        NSLog(@"EMTG - %@ error: %@", self.debugDescription, signResult.errorResult.error);
+        return nil;
+    }
+}
 @end
