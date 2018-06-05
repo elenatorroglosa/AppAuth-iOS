@@ -21,6 +21,7 @@
 #import "OIDClientMetadataParameters.h"
 #import "OIDDefines.h"
 #import "OIDServiceConfiguration.h"
+#import "OIDFederatedMetadataStatement.h"
 
 /*! @brief The key for the @c configuration property for @c NSSecureCoding
  */
@@ -42,6 +43,10 @@ static NSString *const kGrantTypesKey = @"grant_types";
  */
 static NSString *const kSubjectTypeKey = @"subject_type";
 
+static NSString *const kMetadataStatementKey = @"metadata_statements";
+
+static NSString *const kSigningKeysKey = @"signing_keys";
+
 /*! @brief Key used to encode the @c additionalParameters property for
         @c NSSecureCoding
  */
@@ -55,8 +60,11 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
 @synthesize responseTypes = _responseTypes;
 @synthesize grantTypes = _grantTypes;
 @synthesize subjectType = _subjectType;
+@synthesize metadataStatement = _metadataStatement;
+@synthesize signingKeys = _signingKeys;
 @synthesize tokenEndpointAuthenticationMethod = _tokenEndpointAuthenticationMethod;
 @synthesize additionalParameters = _additionalParameters;
+
 
 #pragma mark - Initializers
 
@@ -67,6 +75,8 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
                           responseTypes:
                              grantTypes:
                             subjectType:
+                      metadataStatement:
+                            signingKeys:
                 tokenEndpointAuthMethod:
                    additionalParameters:)
     );
@@ -76,6 +86,8 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
            responseTypes:(nullable NSArray<NSString *> *)responseTypes
               grantTypes:(nullable NSArray<NSString *> *)grantTypes
              subjectType:(nullable NSString *)subjectType
+       metadataStatement:(nullable NSDictionary *)metadataStatement
+             signingKeys:(nullable NSDictionary *)signingKeys
  tokenEndpointAuthMethod:(nullable NSString *)tokenEndpointAuthenticationMethod
     additionalParameters:(nullable NSDictionary<NSString *, NSString *> *)additionalParameters {
   self = [super init];
@@ -85,6 +97,16 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
     _responseTypes = [responseTypes copy];
     _grantTypes = [grantTypes copy];
     _subjectType = [subjectType copy];
+    if (metadataStatement == nil) {
+      _metadataStatement = [configuration metadataStatementApp];
+    } else {
+      _metadataStatement = [metadataStatement copy];
+    }
+    if (signingKeys == nil) {
+      _signingKeys = [configuration signingKeys];
+    } else {
+      _signingKeys = [signingKeys copy];
+    }
     _tokenEndpointAuthenticationMethod = [tokenEndpointAuthenticationMethod copy];
     _additionalParameters =
         [[NSDictionary alloc] initWithDictionary:additionalParameters copyItems:YES];
@@ -122,6 +144,10 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
                                                            forKey:kGrantTypesKey];
   NSString *subjectType = [aDecoder decodeObjectOfClass:[NSString class]
                                                  forKey:kSubjectTypeKey];
+  NSDictionary *metadataStatement = [aDecoder decodeObjectOfClass:[NSDictionary class]
+                                                   forKey:kMetadataStatementKey];
+  NSDictionary *signingKeys = [aDecoder decodeObjectOfClass:[NSDictionary class]
+                                                             forKey:kSigningKeysKey];
   NSString *tokenEndpointAuthenticationMethod =
       [aDecoder decodeObjectOfClass:[NSString class]
                              forKey:OIDTokenEndpointAuthenticationMethodParam];
@@ -135,6 +161,8 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
                        responseTypes:responseTypes
                           grantTypes:grantTypes
                          subjectType:subjectType
+                   metadataStatement:metadataStatement
+                         signingKeys:signingKeys
              tokenEndpointAuthMethod:tokenEndpointAuthenticationMethod
                 additionalParameters:additionalParameters];
   return self;
@@ -146,6 +174,7 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
   [aCoder encodeObject:_responseTypes forKey:kResponseTypesKey];
   [aCoder encodeObject:_grantTypes forKey:kGrantTypesKey];
   [aCoder encodeObject:_subjectType forKey:kSubjectTypeKey];
+  [aCoder encodeObject:_metadataStatement forKey:kMetadataStatementKey];
   [aCoder encodeObject:_tokenEndpointAuthenticationMethod
                 forKey:OIDTokenEndpointAuthenticationMethodParam];
   [aCoder encodeObject:_additionalParameters forKey:kAdditionalParametersKey];
@@ -169,6 +198,12 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
   static NSString *const kHTTPContentTypeHeaderKey = @"Content-Type";
   static NSString *const kHTTPContentTypeHeaderValue = @"application/json";
 
+  /// OIDC Federation - Registration request with signed metadata statements ////
+  NSDictionary * unsigned_ms = [self JSONStringDic];
+  NSDictionary * signed_ms = [OIDFederatedMetadataStatement genFederatedConfigurationUnsigned_ms:unsigned_ms sms:_metadataStatement signing_keys:_signingKeys iss:@"appAuth"];
+
+  _metadataStatement = signed_ms;
+
   NSData *postBody = [self JSONString];
   if (!postBody) {
     return nil;
@@ -181,6 +216,41 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
   [URLRequest setValue:kHTTPContentTypeHeaderValue forHTTPHeaderField:kHTTPContentTypeHeaderKey];
   URLRequest.HTTPBody = postBody;
   return URLRequest;
+}
+
+- (NSDictionary *) JSONStringDic {
+    // Dictionary with several kay/value pairs and the above array of arrays
+    NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+    NSMutableArray<NSString *> *redirectURIStrings =
+    [NSMutableArray arrayWithCapacity:[_redirectURIs count]];
+    for (id obj in _redirectURIs) {
+        [redirectURIStrings addObject:[obj absoluteString]];
+    }
+    dict[OIDRedirectURIsParam] = redirectURIStrings;
+    dict[OIDApplicationTypeParam] = _applicationType;
+
+    if (_additionalParameters) {
+        // Add any additional parameters first to allow them
+        // to be overwritten by instance values
+        [dict addEntriesFromDictionary:_additionalParameters];
+    }
+    if (_responseTypes) {
+        dict[OIDResponseTypesParam] = _responseTypes;
+    }
+    if (_grantTypes) {
+        dict[OIDGrantTypesParam] = _grantTypes;
+    }
+    if (_subjectType) {
+        dict[OIDSubjectTypeParam] = _subjectType;
+    }
+    if (_metadataStatement) {
+        dict[OIDMetadataStatementParam] = _metadataStatement;
+    }
+    if (_tokenEndpointAuthenticationMethod) {
+        dict[OIDTokenEndpointAuthenticationMethodParam] = _tokenEndpointAuthenticationMethod;
+    }
+
+    return dict;
 }
 
 - (NSData *)JSONString {
@@ -208,6 +278,10 @@ static NSString *const kAdditionalParametersKey = @"additionalParameters";
   if (_subjectType) {
     dict[OIDSubjectTypeParam] = _subjectType;
   }
+  if (_metadataStatement) {
+    dict[OIDMetadataStatementParam] = _metadataStatement;
+  }
+
   if (_tokenEndpointAuthenticationMethod) {
     dict[OIDTokenEndpointAuthenticationMethodParam] = _tokenEndpointAuthenticationMethod;
   }

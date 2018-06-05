@@ -34,6 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSArray<NSString *> *_responseTypes;
   NSArray<NSString *> *_grantTypes;
   NSString *_subjectType;
+    NSDictionary *_metadataStatement;
   NSString *_tokenEndpointAuthenticationMethod;
   NSDictionary<NSString *, NSString *> *_additionalParameters;
 }
@@ -74,6 +75,18 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property(nonatomic, readonly, nullable) NSString *subjectType;
 
+/*! @brief The metadata statement to be include in the request (for OIDC Federation)
+ @remarks subject_type
+ @see https://openid.net/specs/openid-connect-federation-1_0.html
+ */
+@property(nonatomic, readonly, nullable) NSDictionary *metadataStatement;
+
+/*! @brief The signing keys used to sign the metadata statements in the request (for OIDC Federation)
+ @remarks subject_type
+ @see https://openid.net/specs/openid-connect-federation-1_0.html
+ */
+@property(nonatomic, readonly, nullable) NSDictionary *signingKeys;
+
 /*! @brief The client authentication method to use at the token endpoint.
     @remarks token_endpoint_auth_method
     @see http://openid.net/specs/openid-connect-core-1_0.html#ClientAuthentication
@@ -95,6 +108,7 @@ NS_ASSUME_NONNULL_BEGIN
     @param responseTypes The response types to register for the client.
     @param grantTypes The grant types to register for the client.
     @param subjectType The subject type to register for the client.
+    @param metadataStatement The metadata statement to be include in the request (for OIDC Federation)
     @param tokenEndpointAuthMethod The token endpoint authentication method to register for the
         client.
     @param additionalParameters The client's additional registration request parameters.
@@ -104,9 +118,20 @@ NS_ASSUME_NONNULL_BEGIN
               responseTypes:(nullable NSArray<NSString *> *)responseTypes
                  grantTypes:(nullable NSArray<NSString *> *)grantTypes
                 subjectType:(nullable NSString *)subjectType
+          metadataStatement:(nullable NSDictionary *)metadataStatement
+                signingKeys:(nullable NSDictionary *)signingKeys
     tokenEndpointAuthMethod:(nullable NSString *)tokenEndpointAuthMethod
-       additionalParameters:(nullable NSDictionary<NSString *, NSString *> *)additionalParameters
-    NS_DESIGNATED_INITIALIZER;
+       additionalParameters:(nullable NSDictionary<NSString *, NSString *> *)additionalParameters;
+
+- (instancetype)initWithConfiguration:(OIDServiceConfiguration *)configuration
+                         redirectURIs:(NSArray<NSURL *> *)redirectURIs
+                        responseTypes:(nullable NSArray<NSString *> *)responseTypes
+                           grantTypes:(nullable NSArray<NSString *> *)grantTypes
+                          subjectType:(nullable NSString *)subjectType
+              tokenEndpointAuthMethod:(nullable NSString *)tokenEndpointAuthMethod
+                 additionalParameters:(nullable NSDictionary<NSString *, NSString *> *)additionalParameters
+                    NS_DESIGNATED_INITIALIZER;
+
 
 /*! @brief Constructs an @c NSURLRequest representing the registration request.
     @return An @c NSURLRequest representing the registration request.
