@@ -30,4 +30,6 @@ NSString *const OIDGrantTypesParam = @"grant_types";
 
 NSString *const OIDSubjectTypeParam = @"subject_type";
 
+NSString *const OIDMetadataStatementParam = @"metadata_statements";
+
 NSString *const OIDApplicationTypeNative = @"native";

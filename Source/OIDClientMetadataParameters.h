@@ -44,6 +44,10 @@ extern NSString *const OIDGrantTypesParam;
  */
 extern NSString *const OIDSubjectTypeParam;
 
+/*! @brief Parameter name for the metadata statement (OIDC Federation).
+ */
+extern NSString *const OIDMetadataStatementParam;
+
 /*! @brief Application type that indicates this client is a native (not a web) application.
  */
 extern NSString *const OIDApplicationTypeNative;
