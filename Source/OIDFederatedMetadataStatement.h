@@ -67,6 +67,11 @@
 
 +(NSDictionary *) getFederatedConfigurationWithDiscoveryDocument:(NSDictionary *)discoveryDoc rootKeys:(NSDictionary *) rootKeys;
 
++ (NSDictionary *) genFederatedConfigurationUnsigned_ms:(NSDictionary *)unsigned_ms
+                                                    sms:(NSDictionary *)sms
+                                           signing_keys:(NSDictionary *)signing_keys
+                                                    iss:(NSString *) iss;
+
 @end
 
 

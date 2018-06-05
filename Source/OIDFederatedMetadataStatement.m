@@ -51,7 +51,7 @@ static inline char itoh(int i) {
                                     freeWhenDone:YES];
 }
 
-+(NSString *) convertFromJWKtoPEM_PrivateKey: (NSDictionary *)jwk {
++(NSString *) convertFromJWKtoPEM_PrivateKey: (NSDictionary *)jwk passphrase:(NSString *)passphrase {
 
     NSLog(@"EMTG - starting convertFromJWKtoPEM_PrivateKey");
     RSA * rsaKey = RSA_new();
@@ -73,8 +73,8 @@ static inline char itoh(int i) {
     p_bn = BN_new();
     q_bn = BN_new();
 
-    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
     NSString * ezu = [jwk objectForKey:@"e"]; // public exponent
+    NSString * nzu = [jwk objectForKey:@"n"]; // public modulus
     NSString * dzu = [jwk objectForKey:@"d"]; // private exponent
     NSString * pzu = [jwk objectForKey:@"p"]; // secret prime factor
     NSString * qzu = [jwk objectForKey:@"q"]; // secret prime factor
@@ -132,7 +132,10 @@ static inline char itoh(int i) {
     const char *p_char = [phexString UTF8String];
     const char *q_char = [qhexString UTF8String];
 
-    //int BN_hex2bn(BIGNUM **a, const char *str);
+    /*int res1 = BN_hex2bn(&e_bn, [[self NSDataToHex:[[NSData alloc]
+                                                  initWithBase64EncodedString:[MF_Base64Codec base64StringFromBase64UrlEncodedString:[jwk objectForKey:@"e"]]
+                                                  options:0]] UTF8String]);*/
+
     int res1 = BN_hex2bn(&e_bn, e_char);
     int res2 = BN_hex2bn(&n_bn, n_char);
     int res3 = BN_hex2bn(&d_bn, d_char);
@@ -158,9 +161,6 @@ static inline char itoh(int i) {
     NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
     FILE *tmpPEMFile = fopen([tmpPEMFilePath cStringUsingEncoding:NSUTF8StringEncoding], "w+");
 
-    //int res_conversion = PEM_write_RSAPublicKey(tmpPEMFile, rsaKey); <--- wrong for public conversion
-    //int res_conversion = PEM_write_RSA_PUBKEY(tmpPEMFile, rsaKey); <-- right for public conversion
-    //int res_conversion = PEM_write_RSAPrivateKey(tmpPEMFile, rsaKey, const EVP_CIPHER *enc, unsigned char *kstr, int klen, pem_password_cb *cb, void *u);
     int res_conversion = PEM_write_RSAPrivateKey(tmpPEMFile, rsaKey, nil, nil, 0, nil, nil);
 
     fclose(tmpPEMFile);
@@ -170,14 +170,15 @@ static inline char itoh(int i) {
     NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
     NSLog(@"EMTG - PEM Private String content:\n%@", pemStr);
 
-    NSString * pemResult = [pemStr componentsSeparatedByString:@"-----"][2]; //TODO have in mind possible fails related to '\n'
+    NSString * pem1 = [pemStr componentsSeparatedByString:@"-----END RSA PRIVATE KEY-----"][0];
+    NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN RSA PRIVATE KEY-----\n"][1];
+
     NSLog(@"EMTG - PEM Private String result:\n%@", pemResult);
 
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
 
     return pemResult; //<-- exception of type NSException
-    //return pemStr;
 }
 
 
@@ -187,7 +188,6 @@ static inline char itoh(int i) {
     RSA * rsaKey = RSA_new();
 
     ENGINE * rsaEngine = ENGINE_new();
-    //ENGINE_get_default_RSA();
     int eng_init_result = ENGINE_init(rsaEngine);
     if (eng_init_result == 0)
         NSLog(@"EMTG - Error initializing the rsaEngine");
@@ -195,7 +195,6 @@ static inline char itoh(int i) {
     rsaKey->engine = rsaEngine;
 
     BIGNUM *n_bn = NULL, *e_bn = NULL;
-    //BIGNUM *d = NULL, *p = NULL, *q = NULL;
 
     e_bn = BN_new();
     n_bn = BN_new();
@@ -257,10 +256,8 @@ static inline char itoh(int i) {
     NSLog(@"EMTG - PEM String content:\n%@", pemStr);
     
     NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END PUBLIC KEY-----"][0];
-    //NSLog(@"EMTG - PEM String content1:\n%@", pem1);
     NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN PUBLIC KEY-----\n"][1];
-    //NSLog(@"EMTG - PEM String result:\n%@", pemResult);
-
+  
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
 
@@ -641,30 +638,32 @@ static inline char itoh(int i) {
 }
 
 + (NSString *) signWithPayloadDocument:(NSDictionary *) payloadDictionary
-                  PrivateKeyPemString:(NSString *)privateKey
-                 privateKeyPassphrase:(NSString *)passphrase {
-
+                      PrivateKeyPemString:(NSString *)privateKey
+                     privateKeyPassphrase:(NSString *)passphrase
+{
+      
     NSString *algorithmName = @"RS256";
-
-    id <JWTAlgorithmDataHolderProtocol> signDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor privateKeyWithPEMBase64].type).privateKeyCertificatePassphrase(passphrase).algorithmName(algorithmName).secret(privateKey);
-
-    // sign
-    // NSDictionary *payloadDictionary = @{@"hello": @"world"};
-
+  
+    id <JWTAlgorithmDataHolderProtocol> signDataHolder = [JWTAlgorithmRSFamilyDataHolder new]
+    .keyExtractorType([JWTCryptoKeyExtractor privateKeyWithPEMBase64].type)
+    .algorithmName(algorithmName)
+    .secret(privateKey);
+  
     JWTCodingBuilder *signBuilder = [JWTEncodingBuilder encodePayload:payloadDictionary].addHolder(signDataHolder);
     JWTCodingResultType *signResult = signBuilder.result;
-    NSString *token = nil;
+
     if (signResult.successResult) {
-        // success
-        NSLog(@"EMTG - %@ success: %@", self.debugDescription, signResult.successResult.encoded);
-        token = signResult.successResult.encoded;
-        return token;
+      // success
+      NSLog(@"EMTG - %@ success: %@", self.debugDescription, signResult.successResult.encoded);
+      NSString *token = signResult.successResult.encoded;
+      return token;
     }
     else {
-        // error
-        NSLog(@"EMTG - %@ error: %@", self.debugDescription, signResult.errorResult.error);
-        return nil;
+      // error
+      NSLog(@"EMTG - %@ error: %@", self.debugDescription, signResult.errorResult.error);
+      // reject(signResult.errorResult);
     }
+  return nil;
 }
 
 /**
@@ -675,54 +674,41 @@ static inline char itoh(int i) {
  * @return A serialized signed JWT
  * @throws InvalidStatementException If something goes wrong
  */
-+ (NSMutableDictionary *) signWithDocument:(NSMutableDictionary *) document
++ (NSString *) signWithDocument:(NSMutableDictionary *) document
                           signing_keys:(NSMutableDictionary *) signing_keys
                                    iss:(NSString *) iss
 {
-    //document.put("iss", iss);
-    [document setObject:iss forKey:@"iss"];
-    // Expires in 15 minutes
-    //document.put("exp", new Date().getTime() + 60 * 15);
-    NSNumber *expirationDate = [NSNumber numberWithDouble:([[NSDate date] timeIntervalSince1970] + 60 * 15)];
-    NSLog(@"EMTG - singDcoument %d", expirationDate.unsignedIntValue);
-    [document setObject:[expirationDate stringValue] forKey:@"exp"];
+  //document.put("iss", iss);
+  [document setObject:iss forKey:@"iss"];
+  // Expires in 15 minutes
+  //document.put("exp", new Date().getTime() + 60 * 15);
+  // TODO change to 15 minutes
+  NSNumber *expirationDate = [NSNumber numberWithDouble:([[NSDate date] timeIntervalSince1970] + (60 * 60 * 24))];
+  NSLog(@"EMTG - singDcoument - expirationDate = %d", expirationDate.unsignedIntValue);
+  [document setObject:[NSString stringWithFormat:@"%d",expirationDate.unsignedIntValue] forKey:@"exp"];
 
-    /*try {
-        //JWKSet jwkSet = JWKSet.parse(signing_keys.toString());
-        List<JWK> matches = new JWKSelector(new JWKMatcher.Builder()
-                                            .keyType(KeyType.RSA)
-                                            .keyUse(KeyUse.SIGNATURE)
-                                            .build())
-        .select(jwkSet);
+  NSString *signedDocument;
 
-        if (matches.size() == 0)
-            throw new InvalidStatementException("No signing RSA key found!");
+  //NSString * passphrase = @"passphrase_appAuth";
+  for (NSDictionary *jwk in [signing_keys objectForKey:@"keys"]) {
+    NSString * type = [jwk objectForKey:@"kty"];
+    if ([type isEqualToString:@"RSA"]) {
+      //NSString *privateKey = [self convertFromJWKtoPEM_PrivateKey:jwk passphrase:passphrase];
+      NSString *privateKey = [jwk objectForKey:@"pem-simplified"];
 
-        JWK key = matches.get(0);
-        RSAPrivateKey privateKey = RSAKey.parse(key.toString()).toRSAPrivateKey();
-
-        // Create RSA-signer with the private key
-        JWSSigner signer = new RSASSASigner(privateKey);
-
-        // Prepare JWS object with simple string as payload
-        JWSObject jwsObject = new JWSObject(
-                                            new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(),
-                                            new Payload(document.toString()));
-
-        // Compute the RSA signature
-        jwsObject.sign(signer);
-        return jwsObject.serialize();
-    } catch (JOSEException | ParseException e) {
-        throw new InvalidStatementException(e.toString());
-    }*/
-    return nil;
+      signedDocument = [self signWithPayloadDocument:document
+                                            PrivateKeyPemString:privateKey
+                                           privateKeyPassphrase:nil];
+      if (signedDocument != nil)
+        break;
+    }
+  }
+  return signedDocument;
 }
 
 
-
-
 /**
- * Generates the top level (MSn) metadata_statements JSON object, to be included into the unsigned docoment
+ * Generates the top level (MSn) metadata_statements JSON object, to be included into the unsigned document
  * @param unsigned_ms Document to be signed
  * @param sms Signed metadata statements of inferior level (MSn-1)
  * @param signing_keys Signing keys
@@ -740,7 +726,7 @@ static inline char itoh(int i) {
     // Iterate over the SMS FOs
     //  for (Iterator<String> it = sms.keys(); it.hasNext(); ) {
     for (NSString* fed_op  in sms) {
-        id value = [sms objectForKey:fed_op];
+        //id value = [sms objectForKey:fed_op];
         // copy unsigned MS (to avoid modifying it)
         NSMutableDictionary * to_be_signed = [unsigned_ms mutableCopy];
         // create the metadata_statements claim
@@ -752,7 +738,7 @@ static inline char itoh(int i) {
         [to_be_signed setObject:mutDic_MS forKey:@"metadata_statements"];
         // sign
         //String signed = sign(to_be_signed, signing_keys, iss);
-        NSDictionary * signedJSON = [self signWithDocument:to_be_signed signing_keys:signing_keys iss:iss];
+        NSString * signedJSON = [self signWithDocument:to_be_signed signing_keys:signing_keys iss:iss];
         // Add this to the collection
         [top_level_sms setObject:signedJSON forKey:fed_op];
         //top_level_sms.put(fed_op, signed);
