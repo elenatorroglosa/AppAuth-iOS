@@ -46,8 +46,17 @@ NS_ASSUME_NONNULL_BEGIN
                                 tokenEndpoint:(NSURL *)tokenEndpoint
                          registrationEndpoint:(nullable NSURL *)registrationEndpoint
                             discoveryDocument:(nullable OIDServiceDiscovery *)discoveryDocument
+                                  signingKeys:(nullable NSDictionary *) signingKeys
+                         metadataStatementApp:(nullable NSDictionary *) metadataStatementApp
                             NS_DESIGNATED_INITIALIZER;
 
+/*- (instancetype)initWithAuthorizationEndpoint:(NSURL *)authorizationEndpoint
+                                tokenEndpoint:(NSURL *)tokenEndpoint
+                         registrationEndpoint:(nullable NSURL *)registrationEndpoint
+                            discoveryDocument:(nullable OIDServiceDiscovery *)discoveryDocument
+
+                            NS_DESIGNATED_INITIALIZER;
+*/
 @end
 
 @implementation OIDServiceConfiguration
@@ -56,6 +65,8 @@ NS_ASSUME_NONNULL_BEGIN
 @synthesize tokenEndpoint = _tokenEndpoint;
 @synthesize registrationEndpoint = _registrationEndpoint;
 @synthesize discoveryDocument = _discoveryDocument;
+@synthesize signingKeys = _signingKeys;
+@synthesize metadataStatementApp = _metadataStatementApp;
 
 - (instancetype)init
     OID_UNAVAILABLE_USE_INITIALIZER(@selector(
@@ -65,9 +76,9 @@ NS_ASSUME_NONNULL_BEGIN
     );
 
 - (instancetype)initWithAuthorizationEndpoint:(NSURL *)authorizationEndpoint
-        tokenEndpoint:(NSURL *)tokenEndpoint
- registrationEndpoint:(nullable NSURL *)registrationEndpoint
-    discoveryDocument:(nullable OIDServiceDiscovery *)discoveryDocument {
+                                tokenEndpoint:(NSURL *)tokenEndpoint
+                         registrationEndpoint:(nullable NSURL *)registrationEndpoint
+                            discoveryDocument:(nullable OIDServiceDiscovery *)discoveryDocument {
 
   self = [super init];
   if (self) {
@@ -77,6 +88,25 @@ NS_ASSUME_NONNULL_BEGIN
     _discoveryDocument = [discoveryDocument copy];
   }
   return self;
+}
+
+- (instancetype)initWithAuthorizationEndpoint:(NSURL *)authorizationEndpoint
+                                tokenEndpoint:(NSURL *)tokenEndpoint
+                         registrationEndpoint:(nullable NSURL *)registrationEndpoint
+                            discoveryDocument:(nullable OIDServiceDiscovery *)discoveryDocument
+                                  signingKeys:(nullable NSDictionary *) signingKeys
+                         metadataStatementApp:(nullable NSDictionary *) metadataStatementApp {
+
+    self = [super init];
+    if (self) {
+        _authorizationEndpoint = [authorizationEndpoint copy];
+        _tokenEndpoint = [tokenEndpoint copy];
+        _registrationEndpoint = [registrationEndpoint copy];
+        _discoveryDocument = [discoveryDocument copy];
+        _signingKeys = [signingKeys copy];
+        _metadataStatementApp = [metadataStatementApp copy];
+    }
+    return self;
 }
 
 - (instancetype)initWithAuthorizationEndpoint:(NSURL *)authorizationEndpoint
@@ -101,6 +131,17 @@ NS_ASSUME_NONNULL_BEGIN
                                tokenEndpoint:discoveryDocument.tokenEndpoint
                         registrationEndpoint:discoveryDocument.registrationEndpoint
                            discoveryDocument:discoveryDocument];
+}
+
+- (instancetype)initWithFederatedService:(OIDServiceDiscovery *) discoveryDocument
+                             signingKeys:(nullable NSDictionary *) signingKeys
+                    metadataStatementApp:(nullable NSDictionary *) metadataStatementApp {
+    return [self initWithAuthorizationEndpoint:discoveryDocument.authorizationEndpoint
+                          tokenEndpoint:discoveryDocument.tokenEndpoint
+                   registrationEndpoint:discoveryDocument.registrationEndpoint
+                      discoveryDocument:discoveryDocument
+                            signingKeys:signingKeys
+                   metadataStatementApp:metadataStatementApp];
 }
 
 #pragma mark - NSCopying

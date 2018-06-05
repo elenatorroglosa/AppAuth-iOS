@@ -38,7 +38,10 @@ typedef void (^OIDServiceConfigurationCreated)
   NSURL *_tokenEndpoint;
   NSURL *_registrationEndpoint;
   OIDServiceDiscovery *_discoveryDocument;
+  NSDictionary *_signingKeys;
+  NSDictionary *_metadataStatementApp;
 }
+
 
 /*! @brief The authorization endpoint URI.
  */
@@ -55,6 +58,10 @@ typedef void (^OIDServiceConfigurationCreated)
 /*! @brief The discovery document.
  */
 @property(nonatomic, readonly, nullable) OIDServiceDiscovery *discoveryDocument;
+
+@property(nonatomic, readonly, nullable) NSDictionary * signingKeys;
+
+@property(nonatomic, readonly, nullable) NSDictionary * metadataStatementApp;
 
 /*! @internal
     @brief Unavailable. Please use @c initWithAuthorizationEndpoint:tokenEndpoint: or
@@ -76,10 +83,21 @@ typedef void (^OIDServiceConfigurationCreated)
                                 tokenEndpoint:(NSURL *)tokenEndpoint
                          registrationEndpoint:(nullable NSURL *)registrationEndpoint;
 
+- (instancetype)initWithAuthorizationEndpoint:(NSURL *)authorizationEndpoint
+                                tokenEndpoint:(NSURL *)tokenEndpoint
+                         registrationEndpoint:(nullable NSURL *)registrationEndpoint
+                            discoveryDocument:(nullable OIDServiceDiscovery *) discoveryDocument
+                                  signingKeys:(nullable NSDictionary *) signingKeys
+                         metadataStatementApp:(nullable NSDictionary *) metadataStatementApp;
+
 /*! @param discoveryDocument The discovery document from which to extract the required OAuth
         configuration.
  */
 - (instancetype)initWithDiscoveryDocument:(OIDServiceDiscovery *)discoveryDocument;
+
+- (instancetype)initWithFederatedService:(OIDServiceDiscovery *) discoveryDocument
+                             signingKeys:(nullable NSDictionary *) signingKeys
+                    metadataStatementApp:(nullable NSDictionary *) metadataStatementApp;
 
 @end
 
