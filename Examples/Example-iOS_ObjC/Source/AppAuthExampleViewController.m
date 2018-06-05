@@ -57,6 +57,14 @@ static NSString *const kRedirectURI = @"es.um.inf.oidcfed:/oauth2redirect";
  */
 static NSString *const kAppAuthExampleAuthStateKey = @"authState";
 
+
+// Load Federated Configuration
+static NSString *const federatedConfigFileName = @"fed_config";
+static NSDictionary *dictionaryfederationConfig;
+static NSDictionary *dictionaryRootKeys;
+static NSDictionary *dictionarySigningKeys;
+static NSDictionary *dictionaryMetadataStatement;
+
 @interface AppAuthExampleViewController () <OIDAuthStateChangeDelegate, OIDAuthStateErrorDelegate>
 @end
 
@@ -106,6 +114,32 @@ static NSString *const kAppAuthExampleAuthStateKey = @"authState";
            @"Configure the URI scheme in Info.plist (URL Types -> Item 0 -> URL Schemes -> Item 0) "
             "with the scheme of your redirect URI. Full instructions: "
             "https://github.com/openid/AppAuth-iOS/blob/master/Examples/Example-iOS_ObjC/README.md");
+
+  NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:federatedConfigFileName ofType:@"json"];
+  if (!federationConfigPath) {
+    NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
+  } else {
+    NSLog(@"EMTG - path: %@",federationConfigPath);
+    NSError *jsonError = nil;
+    NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
+    id objectfederationConfigDocument = [NSJSONSerialization
+                                         JSONObjectWithData:jsonfederationConfigData
+                                         options:0
+                                         error:&jsonError];
+
+    if(jsonError) {
+      NSAssert(1, @"JSON federated configuration file is malformed.");//
+    }
+
+    if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
+    {
+      NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
+    }
+    dictionaryfederationConfig = objectfederationConfigDocument;
+    dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];
+    dictionarySigningKeys = [dictionaryfederationConfig objectForKey:@"signing_keys"];
+    dictionaryMetadataStatement = [dictionaryfederationConfig objectForKey:@"metadata_statements"];
+  }
 
 #endif // !defined(NS_BLOCK_ASSERTIONS)
 }
@@ -181,18 +215,22 @@ static NSString *const kAppAuthExampleAuthStateKey = @"authState";
                     callback:(PostRegistrationCallback)callback {
     NSURL *redirectURI = [NSURL URLWithString:kRedirectURI];
 
+    //TODO: Federation checks and registration request preparation
+
     OIDRegistrationRequest *request =
         [[OIDRegistrationRequest alloc] initWithConfiguration:configuration
                                                  redirectURIs:@[ redirectURI ]
                                                 responseTypes:nil
                                                    grantTypes:nil
                                                   subjectType:nil
+                                            metadataStatement:nil
+                                                  signingKeys:nil
                                       tokenEndpointAuthMethod:@"client_secret_basic"
                                          additionalParameters:nil];
     // performs registration request
     [self logMessage:@"Initiating registration request"];
 
-    [OIDAuthorizationService performRegistrationRequest:request
+  [OIDAuthorizationService performRegistrationRequest:request federationRootKeys:dictionaryRootKeys
         completion:^(OIDRegistrationResponse *_Nullable regResp, NSError *_Nullable error) {
       if (regResp) {
         [self setAuthState:[[OIDAuthState alloc] initWithRegistrationResponse:regResp]];
