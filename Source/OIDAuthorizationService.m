@@ -190,143 +190,150 @@ NS_ASSUME_NONNULL_BEGIN
 }
 
 + (void)discoverServiceConfigurationForDiscoveryURL:(NSURL *)discoveryURL
-    completion:(OIDDiscoveryCallback)completion {
-
-  NSURLSession *session = [NSURLSession sharedSession];
-  NSURLSessionDataTask *task =
-      [session dataTaskWithURL:discoveryURL
-             completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-    // If we got any sort of error, just report it.
-    if (error || !data) {
-      error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
-                               underlyingError:error
-                                   description:error.localizedDescription];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        completion(nil, error);
-      });
-      return;
-    }
-
-    NSHTTPURLResponse *urlResponse = (NSHTTPURLResponse *)response;
-
-    // Check for non-200 status codes.
-    // https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse
-    if (urlResponse.statusCode != 200) {
-      NSError *URLResponseError = [OIDErrorUtilities HTTPErrorWithHTTPResponse:urlResponse
-                                                                          data:data];
-      error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
-                               underlyingError:URLResponseError
-                                   description:nil];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        completion(nil, error);
-      });
-      return;
-    }
- 
-     // data is the discovery metadata -- emtg
+                                         completion:(OIDDiscoveryCallback)completion {
     
-    if (data) {
-         if(NSClassFromString(@"NSJSONSerialization"))
-         {
-             NSError *jsonError = nil;
-             id objectDiscoveryDocument = [NSJSONSerialization
-                                           JSONObjectWithData:data
-                                           options:0
-                                           error:&jsonError];
+    NSURLSession *session = [NSURLSession sharedSession];
+    NSURLSessionDataTask *task =
+    [session dataTaskWithURL:discoveryURL
+           completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+               // If we got any sort of error, just report it.
+               if (error || !data) {
+                   error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
+                                            underlyingError:error
+                                                description:error.localizedDescription];
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                       completion(nil, error);
+                   });
+                   return;
+               }
 
-             if(jsonError) {
-                 // JSON was malformed, act appropriately here
-             }
+               NSHTTPURLResponse *urlResponse = (NSHTTPURLResponse *)response;
 
-             if([objectDiscoveryDocument isKindOfClass:[NSDictionary class]])
-             {
-                 NSDictionary *dicDiscoveryDocument = objectDiscoveryDocument;
+               // Check for non-200 status codes.
+               // https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfigurationResponse
+               if (urlResponse.statusCode != 200) {
+                   NSError *URLResponseError = [OIDErrorUtilities HTTPErrorWithHTTPResponse:urlResponse
+                                                                                       data:data];
+                   error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
+                                            underlyingError:URLResponseError
+                                                description:nil];
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                       completion(nil, error);
+                   });
+                   return;
+               }
 
-                 NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:@"fed_config" ofType:@"json"];
-                 if (!federationConfigPath) {
-                     NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
-                 } else {
-                     NSLog(@"EMTG - path: %@",federationConfigPath);
+               // data is the discovery metadata -- emtg
 
-                     NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
-                     id objectfederationConfigDocument = [NSJSONSerialization
-                                                   JSONObjectWithData:jsonfederationConfigData
-                                                   options:0
-                                                   error:&jsonError];
+               // Load Federated Configuration
+               //TODO: check to get them from the App Context (AppAuthExampleViewController)
+               NSDictionary *dictionaryfederationConfig = nil;
+               NSDictionary *dictionaryRootKeys = nil;
+               NSDictionary *dictionarySigningKeys = nil;
+               NSDictionary *dictionaryMetadataStatement = nil;
 
-                     if(jsonError) {
-                         // JSON was malformed, act appropriately here
-                     }
+               if (data) {
+                   if(NSClassFromString(@"NSJSONSerialization"))
+                   {
+                       NSError *jsonError = nil;
+                       id objectDiscoveryDocument = [NSJSONSerialization
+                                                     JSONObjectWithData:data
+                                                     options:0
+                                                     error:&jsonError];
 
-                     if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
-                     {
-                         NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
-                     }
-                     NSDictionary *dictionaryfederationConfig = objectfederationConfigDocument;
-                     NSDictionary *dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];
-                     //NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
-                     //NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
+                       if(jsonError) {
+                           // JSON was malformed, act appropriately here
+                       }
 
-                     NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
+                       if([objectDiscoveryDocument isKindOfClass:[NSDictionary class]])
+                       {
+                           NSDictionary *dicDiscoveryDocument = objectDiscoveryDocument;
 
-                     NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
-                     
-                     if (federatedMetadataStr) {
-                         NSLog(@"EMTG - Validated and deflatted federated Metadata Statement: \n%@", federatedMetadataStr);
-                         NSError *error;
-                         data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
-                                                                        options:NSJSONWritingPrettyPrinted
-                                                                          error:&error];
-                     }
-                     else {
-                         NSLog(@"EMTG - Error processing the federated discovery document.");
-                     }
-                     
-                 }
-             }
-             else
-             {
-                 // there's no guarantee that the outermost object in a JSON
-                 // packet will be a dictionary; if we get here then it wasn't,
-                 // so 'object' shouldn't be treated as an NSDictionary; probably
-                 // you need to report a suitable error condition
-             }
-         }
-         else
-         {
-             // the user is using iOS 4; we'll need to use a third-party solution.
-             // If you don't intend to support iOS 4 then get rid of this entire
-             // conditional and just jump straight to
-             // NSError *error = nil;
-             // [NSJSONSerialization JSONObjectWithData:...
-         }
-     }
-     //emtg: end modification to print data content
+                           NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:@"fed_config" ofType:@"json"];
+                           if (!federationConfigPath) {
+                               NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
+                           } else {
+                               NSLog(@"EMTG - path: %@",federationConfigPath);
 
+                               NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
+                               id objectfederationConfigDocument = [NSJSONSerialization
+                                                                    JSONObjectWithData:jsonfederationConfigData
+                                                                    options:0
+                                                                    error:&jsonError];
 
-    // Construct an OIDServiceDiscovery with the received JSON.
-    OIDServiceDiscovery *discovery = [[OIDServiceDiscovery alloc] initWithJSONData:data error:&error];
-                 
-     if (error || !discovery) {
-      error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
-                               underlyingError:error
-                                   description:nil];
-      dispatch_async(dispatch_get_main_queue(), ^{
-        completion(nil, error);
-      });
-      return;
-    }
+                               if(jsonError) {
+                                   // JSON was malformed, act appropriately here
+                               }
 
-    // Create our service configuration with the discovery document and return it.
-    OIDServiceConfiguration *configuration =
-        [[OIDServiceConfiguration alloc] initWithDiscoveryDocument:discovery];
-    dispatch_async(dispatch_get_main_queue(), ^{
-      completion(configuration, nil);
-    });
-  }];
-  [task resume];
+                               if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
+                               {
+                                   NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
+                               }
+                               dictionaryfederationConfig = objectfederationConfigDocument;
+                               dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];
+                               dictionarySigningKeys = [dictionaryfederationConfig objectForKey:@"signing_keys"];
+                               dictionaryMetadataStatement = [dictionaryfederationConfig objectForKey:@"metadata_statements"];
+
+                               //NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
+                               //NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
+
+                               NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
+
+                               NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
+
+                               if (federatedMetadataStr) {
+                                   NSLog(@"EMTG - Validated and deflatted federated Metadata Statement: \n%@", federatedMetadataStr);
+                                   NSError *error;
+                                   data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
+                                                                          options:NSJSONWritingPrettyPrinted
+                                                                            error:&error];
+                               }
+                               else {
+                                   NSLog(@"EMTG - Error processing the federated discovery document.");
+                               }
+                           }
+                       }
+                       else
+                       {
+                           // there's no guarantee that the outermost object in a JSON
+                           // packet will be a dictionary; if we get here then it wasn't,
+                           // so 'object' shouldn't be treated as an NSDictionary; probably
+                           // you need to report a suitable error condition
+                       }
+                   }
+                   else
+                   {
+                       // the user is using iOS 4; we'll need to use a third-party solution.
+                       // If you don't intend to support iOS 4 then get rid of this entire
+                       // conditional and just jump straight to
+                       // NSError *error = nil;
+                       // [NSJSONSerialization JSONObjectWithData:...
+                   }
+               }
+               //emtg: end modification to print data content
+
+               // Construct an OIDServiceDiscovery with the received JSON.
+               OIDServiceDiscovery *discovery = [[OIDServiceDiscovery alloc] initWithJSONData:data error:&error];
+
+               if (error || !discovery) {
+                   error = [OIDErrorUtilities errorWithCode:OIDErrorCodeNetworkError
+                                            underlyingError:error
+                                                description:nil];
+                   dispatch_async(dispatch_get_main_queue(), ^{
+                       completion(nil, error);
+                   });
+                   return;
+               }
+
+               // Create our service configuration with the discovery document and return it.
+               OIDServiceConfiguration *configuration =
+               [[OIDServiceConfiguration alloc] initWithFederatedService:discovery signingKeys:dictionarySigningKeys metadataStatementApp:dictionaryMetadataStatement];
+               dispatch_async(dispatch_get_main_queue(), ^{
+                   completion(configuration, nil);
+               });
+           }];
+    [task resume];
 }
-
 
 #pragma mark - Authorization Endpoint
 
@@ -441,7 +448,8 @@ NS_ASSUME_NONNULL_BEGIN
 #pragma mark - Registration Endpoint
 
 + (void)performRegistrationRequest:(OIDRegistrationRequest *)request
-                          completion:(OIDRegistrationCompletion)completion {
+                federationRootKeys:(NSDictionary *) rootKeys
+                        completion:(OIDRegistrationCompletion)completion {
   NSURLRequest *URLRequest = [request URLRequest];
   if (!URLRequest) {
     // A problem occurred deserializing the response/JSON.
@@ -523,10 +531,18 @@ NS_ASSUME_NONNULL_BEGIN
       return;
     }
 
+    // EMTG: JSON Registration Response signature verification
+    NSDictionary * verifiedJSON = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:json rootKeys:rootKeys];
+
+    if (verifiedJSON)
+      NSLog(@"EMTG - Validation of Registration Response %@", verifiedJSON.debugDescription);
+    else
+      NSLog(@"EMTG - Registration Response validation is failing.");
+
     OIDRegistrationResponse *registrationResponse =
         [[OIDRegistrationResponse alloc] initWithRequest:request
                                               parameters:json];
-    if (!registrationResponse) {
+    if (!registrationResponse || !verifiedJSON) {
       // A problem occurred constructing the registration response from the JSON.
       NSError *returnedError =
           [OIDErrorUtilities errorWithCode:OIDErrorCodeRegistrationResponseConstructionError

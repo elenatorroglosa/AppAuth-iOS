@@ -136,6 +136,7 @@ typedef void (^OIDRegistrationCompletion)(OIDRegistrationResponse *_Nullable reg
     @param completion The method called when the request has completed or failed.
  */
 + (void)performRegistrationRequest:(OIDRegistrationRequest *)request
+                federationRootKeys:(NSDictionary *) rootKeys
                         completion:(OIDRegistrationCompletion)completion;
 
 @end
