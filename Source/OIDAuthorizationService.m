@@ -223,7 +223,7 @@ NS_ASSUME_NONNULL_BEGIN
                    return;
                }
 
-               // data is the discovery metadata -- emtg
+               // data is the discovery metadata -- OIDCFED
 
                // Load Federated Configuration
                //TODO: check to get them from the App Context (AppAuthExampleViewController)
@@ -251,9 +251,9 @@ NS_ASSUME_NONNULL_BEGIN
 
                            NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:@"fed_config" ofType:@"json"];
                            if (!federationConfigPath) {
-                               NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
+                               NSLog(@"OIDCFED - Not found federation federationConfig file, so continue without federation.");
                            } else {
-                               NSLog(@"EMTG - path: %@",federationConfigPath);
+                               NSLog(@"OIDCFED - path: %@",federationConfigPath);
 
                                NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
                                id objectfederationConfigDocument = [NSJSONSerialization
@@ -267,7 +267,7 @@ NS_ASSUME_NONNULL_BEGIN
 
                                if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
                                {
-                                   NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
+                                   NSLog(@"OIDCFED: invalid format of RootKey document");//TODO: process error
                                }
                                dictionaryfederationConfig = objectfederationConfigDocument;
                                dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];
@@ -275,21 +275,21 @@ NS_ASSUME_NONNULL_BEGIN
                                dictionaryMetadataStatement = [dictionaryfederationConfig objectForKey:@"metadata_statements"];
 
                                //NSString *strRootKeysData = dictionaryRootKeys.debugDescription;
-                               //NSLog(@"EMTG - rootKeys document: \n%@", strRootKeysData);
+                               //NSLog(@"OIDCFED - rootKeys document: \n%@", strRootKeysData);
 
                                NSDictionary *federatedMetadataStatement = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:dicDiscoveryDocument                                                                                                                                  rootKeys:dictionaryRootKeys];
 
                                NSString *federatedMetadataStr = federatedMetadataStatement.debugDescription;
 
                                if (federatedMetadataStr) {
-                                   NSLog(@"EMTG - Validated and deflatted federated Metadata Statement: \n%@", federatedMetadataStr);
+                                   NSLog(@"OIDCFED - Validated and deflatted federated Metadata Statement: \n%@", federatedMetadataStr);
                                    NSError *error;
                                    data = [NSJSONSerialization dataWithJSONObject:federatedMetadataStatement
                                                                           options:NSJSONWritingPrettyPrinted
                                                                             error:&error];
                                }
                                else {
-                                   NSLog(@"EMTG - Error processing the federated discovery document.");
+                                   NSLog(@"OIDCFED - Error processing the federated discovery document.");
                                }
                            }
                        }
@@ -310,7 +310,7 @@ NS_ASSUME_NONNULL_BEGIN
                        // [NSJSONSerialization JSONObjectWithData:...
                    }
                }
-               //emtg: end modification to print data content
+               //OIDCFED: end modification to print data content
 
                // Construct an OIDServiceDiscovery with the received JSON.
                OIDServiceDiscovery *discovery = [[OIDServiceDiscovery alloc] initWithJSONData:data error:&error];
@@ -531,13 +531,13 @@ NS_ASSUME_NONNULL_BEGIN
       return;
     }
 
-    // EMTG: JSON Registration Response signature verification
+    // OIDCFED: JSON Registration Response signature verification
     NSDictionary * verifiedJSON = [OIDFederatedMetadataStatement getFederatedConfigurationWithDiscoveryDocument:json rootKeys:rootKeys];
 
     if (verifiedJSON)
-      NSLog(@"EMTG - Validation of Registration Response %@", verifiedJSON.debugDescription);
+      NSLog(@"OIDCFED - Validation of Registration Response %@", verifiedJSON.debugDescription);
     else
-      NSLog(@"EMTG - Registration Response validation is failing.");
+      NSLog(@"OIDCFED - Registration Response validation is failing.");
 
     OIDRegistrationResponse *registrationResponse =
         [[OIDRegistrationResponse alloc] initWithRequest:request

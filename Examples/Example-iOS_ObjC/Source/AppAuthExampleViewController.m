@@ -117,9 +117,9 @@ static NSDictionary *dictionaryMetadataStatement;
 
   NSString *federationConfigPath = [[NSBundle mainBundle] pathForResource:federatedConfigFileName ofType:@"json"];
   if (!federationConfigPath) {
-    NSLog(@"EMTG - Not found federation federationConfig file, so continue without federation.");
+    NSLog(@"OIDCFED - Not found federation federationConfig file, so continue without federation.");
   } else {
-    NSLog(@"EMTG - path: %@",federationConfigPath);
+    NSLog(@"OIDCFED - path: %@",federationConfigPath);
     NSError *jsonError = nil;
     NSData *jsonfederationConfigData = [NSData dataWithContentsOfFile:federationConfigPath];
     id objectfederationConfigDocument = [NSJSONSerialization
@@ -133,7 +133,7 @@ static NSDictionary *dictionaryMetadataStatement;
 
     if(![objectfederationConfigDocument isKindOfClass:[NSDictionary class]])
     {
-      NSLog(@"EMTG: invalid format of RootKey document");//TODO: process error
+      NSLog(@"OIDCFED: invalid format of RootKey document");//TODO: process error
     }
     dictionaryfederationConfig = objectfederationConfigDocument;
     dictionaryRootKeys = [dictionaryfederationConfig objectForKey:@"authorized_keys"];

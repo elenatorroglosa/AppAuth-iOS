@@ -53,14 +53,14 @@ static inline char itoh(int i) {
 
 +(NSString *) convertFromJWKtoPEM_PrivateKey: (NSDictionary *)jwk passphrase:(NSString *)passphrase {
 
-    NSLog(@"EMTG - starting convertFromJWKtoPEM_PrivateKey");
+    NSLog(@"OIDCFED - starting convertFromJWKtoPEM_PrivateKey");
     RSA * rsaKey = RSA_new();
 
     ENGINE * rsaEngine = ENGINE_new();
     //ENGINE_get_default_RSA();
     int eng_init_result = ENGINE_init(rsaEngine);
     if (eng_init_result == 0)
-        NSLog(@"EMTG - Error initializing the rsaEngine");
+        NSLog(@"OIDCFED - Error initializing the rsaEngine");
 
     rsaKey->engine = rsaEngine;
 
@@ -110,21 +110,21 @@ static inline char itoh(int i) {
     NSString * phexString = [self NSDataToHex:pn];
     NSString * qhexString = [self NSDataToHex:qn];
 
-    NSLog(@"EMTG - load param n: \n%@", nz);
-    NSLog(@"EMTG - load param e: \n%@", ez);
-    NSLog(@"EMTG - load param d: \n%@", dz);
-    NSLog(@"EMTG - load param d: \n%@", pz);
-    NSLog(@"EMTG - load param d: \n%@", qz);
-    NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
-    NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
-    NSLog(@"EMTG - dn converted from b64urlformat: %@", dn.debugDescription);
-    NSLog(@"EMTG - dn converted from b64urlformat: %@", pn.debugDescription);
-    NSLog(@"EMTG - dn converted from b64urlformat: %@", qn.debugDescription);
-    NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
-    NSLog(@"EMTG - nn converted to hexadecimal: %@", nhexString);
-    NSLog(@"EMTG - dn converted to hexadecimal: %@", dhexString);
-    NSLog(@"EMTG - dn converted to hexadecimal: %@", phexString);
-    NSLog(@"EMTG - dn converted to hexadecimal: %@", qhexString);
+    NSLog(@"OIDCFED - load param n: \n%@", nz);
+    NSLog(@"OIDCFED - load param e: \n%@", ez);
+    NSLog(@"OIDCFED - load param d: \n%@", dz);
+    NSLog(@"OIDCFED - load param d: \n%@", pz);
+    NSLog(@"OIDCFED - load param d: \n%@", qz);
+    NSLog(@"OIDCFED - nn converted from b64urlformat: %@", nn.debugDescription);
+    NSLog(@"OIDCFED - en converted from b64urlformat: %@", en.debugDescription);
+    NSLog(@"OIDCFED - dn converted from b64urlformat: %@", dn.debugDescription);
+    NSLog(@"OIDCFED - dn converted from b64urlformat: %@", pn.debugDescription);
+    NSLog(@"OIDCFED - dn converted from b64urlformat: %@", qn.debugDescription);
+    NSLog(@"OIDCFED - en converted to hexadecimal: %@", ehexString);
+    NSLog(@"OIDCFED - nn converted to hexadecimal: %@", nhexString);
+    NSLog(@"OIDCFED - dn converted to hexadecimal: %@", dhexString);
+    NSLog(@"OIDCFED - dn converted to hexadecimal: %@", phexString);
+    NSLog(@"OIDCFED - dn converted to hexadecimal: %@", qhexString);
 
     const char *e_char = [ehexString UTF8String];
     const char *n_char = [nhexString UTF8String];
@@ -155,7 +155,7 @@ static inline char itoh(int i) {
     int rsa_print = RSA_print_fp(tmpRSAFile, rsaKey, 0);
     fclose(tmpRSAFile);
     NSString * fileContents = [NSString stringWithContentsOfFile:tmpRSAFilePath encoding:NSUTF8StringEncoding error:nil];
-    NSLog(@"EMTG - RSA_print_fp:\n%@", fileContents);
+    NSLog(@"OIDCFED - RSA_print_fp:\n%@", fileContents);
     /////////////////
 
     NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
@@ -164,16 +164,16 @@ static inline char itoh(int i) {
     int res_conversion = PEM_write_RSAPrivateKey(tmpPEMFile, rsaKey, nil, nil, 0, nil, nil);
 
     fclose(tmpPEMFile);
-    NSLog(@"EMTG - conversion result form RSA to PEM (private key): %d", res_conversion);
+    NSLog(@"OIDCFED - conversion result form RSA to PEM (private key): %d", res_conversion);
 
     // read the contents into a string
     NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
-    NSLog(@"EMTG - PEM Private String content:\n%@", pemStr);
+    NSLog(@"OIDCFED - PEM Private String content:\n%@", pemStr);
 
     NSString * pem1 = [pemStr componentsSeparatedByString:@"-----END RSA PRIVATE KEY-----"][0];
     NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN RSA PRIVATE KEY-----\n"][1];
 
-    NSLog(@"EMTG - PEM Private String result:\n%@", pemResult);
+    NSLog(@"OIDCFED - PEM Private String result:\n%@", pemResult);
 
     ENGINE_finish(rsaEngine);
     RSA_free(rsaKey);
@@ -184,13 +184,13 @@ static inline char itoh(int i) {
 
 +(NSString *) convertFromJWKtoPEM_PublicKey: (NSDictionary *)jwk {
 
-    NSLog(@"EMTG - starting convertFromJWKtoPEM");
+    NSLog(@"OIDCFED - starting convertFromJWKtoPEM");
     RSA * rsaKey = RSA_new();
 
     ENGINE * rsaEngine = ENGINE_new();
     int eng_init_result = ENGINE_init(rsaEngine);
     if (eng_init_result == 0)
-        NSLog(@"EMTG - Error initializing the rsaEngine");
+        NSLog(@"OIDCFED - Error initializing the rsaEngine");
 
     rsaKey->engine = rsaEngine;
 
@@ -215,12 +215,12 @@ static inline char itoh(int i) {
     NSString * ehexString = [self NSDataToHex:en];
     NSString * nhexString = [self NSDataToHex:nn];
     
-    NSLog(@"EMTG - load param n: \n%@", nz);
-    NSLog(@"EMTG - load param e: \n%@", ez);
-    NSLog(@"EMTG - nn converted from b64urlformat: %@", nn.debugDescription);
-    NSLog(@"EMTG - en converted from b64urlformat: %@", en.debugDescription);
-    NSLog(@"EMTG - en converted to hexadecimal: %@", ehexString);
-    NSLog(@"EMTG - nn converted to hexadecimal: %@", nhexString);
+    NSLog(@"OIDCFED - load param n: \n%@", nz);
+    NSLog(@"OIDCFED - load param e: \n%@", ez);
+    NSLog(@"OIDCFED - nn converted from b64urlformat: %@", nn.debugDescription);
+    NSLog(@"OIDCFED - en converted from b64urlformat: %@", en.debugDescription);
+    NSLog(@"OIDCFED - en converted to hexadecimal: %@", ehexString);
+    NSLog(@"OIDCFED - nn converted to hexadecimal: %@", nhexString);
 
     const char *e_char = [ehexString UTF8String];
     const char *n_char = [nhexString UTF8String];
@@ -239,7 +239,7 @@ static inline char itoh(int i) {
     int rsa_print = RSA_print_fp(tmpRSAFile, rsaKey, 0);
     fclose(tmpRSAFile);
     NSString * fileContents = [NSString stringWithContentsOfFile:tmpRSAFilePath encoding:NSUTF8StringEncoding error:nil];
-    NSLog(@"EMTG - RSA_print_fp:\n%@", fileContents);
+    NSLog(@"OIDCFED - RSA_print_fp:\n%@", fileContents);
     /////////////////
 
     NSString * tmpPEMFilePath = [NSTemporaryDirectory() stringByAppendingPathComponent: [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"txt"]];
@@ -249,11 +249,11 @@ static inline char itoh(int i) {
     int res_conversion = PEM_write_RSA_PUBKEY(tmpPEMFile, rsaKey);
 
     fclose(tmpPEMFile);
-    NSLog(@"EMTG - conversion result form RSA to PEM: %d", res_conversion);
+    NSLog(@"OIDCFED - conversion result form RSA to PEM: %d", res_conversion);
 
     // read the contents into a string
     NSString *pemStr = [[NSString alloc]initWithContentsOfFile:tmpPEMFilePath encoding:NSUTF8StringEncoding error:nil];
-    NSLog(@"EMTG - PEM String content:\n%@", pemStr);
+    NSLog(@"OIDCFED - PEM String content:\n%@", pemStr);
     
     NSString *pem1 = [pemStr componentsSeparatedByString:@"-----END PUBLIC KEY-----"][0];
     NSString * pemResult = [pem1 componentsSeparatedByString:@"-----BEGIN PUBLIC KEY-----\n"][1];
@@ -273,7 +273,7 @@ static inline char itoh(int i) {
         if (jsonDic) {
             return jsonDic;
         }
-        NSLog(@"EMTG - Error in the JSON serialization from NSString to NSDictorionary: \n%@", jsonError);
+        NSLog(@"OIDCFED - Error in the JSON serialization from NSString to NSDictorionary: \n%@", jsonError);
         return nil;
     }
     return nil;
@@ -288,7 +288,7 @@ static inline char itoh(int i) {
         return jsonDict;
     }
 
-    NSLog(@"EMTG Error in the JSON payload docodification from JWT to NSDictorionary: \n%@", jsonError);
+    NSLog(@"OIDCFED Error in the JSON payload docodification from JWT to NSDictorionary: \n%@", jsonError);
     return nil;
 }
 
@@ -327,7 +327,7 @@ static inline char itoh(int i) {
         NSError *returnedError = [OIDErrorUtilities errorWithCode:OIDErrorCodeJSONDeserializationError
                                                   underlyingError:jsonError
                                                   description:nil];
-        NSLog(@"EMTG A problem occurred deserializing the JSON: \n%@", returnedError);
+        NSLog(@"OIDCFED A problem occurred deserializing the JSON: \n%@", returnedError);
     }
     return json;
 }
@@ -393,12 +393,12 @@ static inline char itoh(int i) {
             /* Else -> policy breach */
             //TODO:  throw new InvalidStatementException("Policy breach with claim: " + claim_name + ". Lower value=" + lower.get(claim_name) + ". Upper value=" + upper.get(claim_name));
             flattened = nil;
-            NSLog(@"EMTG - FLATTENED ERROR.");
+            NSLog(@"OIDCFED - FLATTENED ERROR.");
             break;
         }
     }
     if (flattened)
-        NSLog(@"EMTG - Flattened process completed.");
+        NSLog(@"OIDCFED - Flattened process completed.");
 
     return [NSDictionary dictionaryWithDictionary:flattened];;
 }
@@ -414,30 +414,20 @@ static inline char itoh(int i) {
     NSString *payload = [self getJWTPayloadB64WithJWTDocument:fed_ms_jwt];
     //NSString *payload = [self getJWTPayloadStringWithJWTDocument:fed_ms_jwt];
     
-    NSLog(@"EMTG - verifySignatureWithFed_ms_jwt - header: \n%@", header.debugDescription);
+    NSLog(@"OIDCFED - verifySignatureWithFed_ms_jwt - header: \n%@", header.debugDescription);
 
     NSString *kid = [header objectForKey:@"kid"];
     NSString *alg = [header objectForKey:@"alg"];
     NSString *algorithmName = @"RS256";
 
-    NSLog(@"EMTG - print header params alg: %@ and kid: %@", alg, kid);
-
-    //NSString *publicKey = nil;
-    /*NSArray * keysArray = [validKeys objectForKey:@"keys"];
-    for (NSDictionary *keyDic in keysArray) {
-        NSString *value = [keyDic valueForKey:@"kid"];
-        if ([value isEqualToString:kid]) {
-            publicKey = [keyDic valueForKey:@"n"];
-            NSLog(@"EMTG - public key found for kid: %@", kid);
-        }
-    }*/
+    NSLog(@"OIDCFED - print header params alg: %@ and kid: %@", alg, kid);
 
     NSDictionary * publicKey = [validKeys valueForKey:kid];
     if (publicKey == nil) {
-        NSLog(@"EMTG - ERROR: public key not found for kid: %@", kid);
+        NSLog(@"OIDCFED - ERROR: public key not found for kid: %@", kid);
         return NO;
     }
-    NSLog(@"EMTG - public KEY FOUND for kid: %@", kid);
+    NSLog(@"OIDCFED - public KEY FOUND for kid: %@", kid);
 
     NSString * pemPublicKey =  [self convertFromJWKtoPEM_PublicKey:publicKey];
 
@@ -447,23 +437,17 @@ static inline char itoh(int i) {
     NSDictionary *parameters = nil;     // pass nil parameters
     NSError *__autoreleasing*error = nil;
 
-    /*id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithBase64String:pemPublicKey parameters:parameters error:error];
-    //id publicJWTKey = [[JWTCryptoKeyPublic alloc] initWithPemEncoded:pemPublicKey parameters:parameters error:error]; // Uncaught exception of type NSException
-    if (error == nil)
-        NSLog(@"EMTG - error parsing the public key pem string:\n %@", error );
-    else
-        NSLog(@"EMTG - key extraction without errors.");*/
- 
     id <JWTAlgorithmDataHolderProtocol> verifyDataHolder = [JWTAlgorithmRSFamilyDataHolder new].keyExtractorType([JWTCryptoKeyExtractor publicKeyWithPEMBase64].type).algorithmName(algorithmName).secret(pemPublicKey);
 
     JWTCodingBuilder *verifyBuilder = [JWTDecodingBuilder decodeMessage:fed_ms_jwt].addHolder(verifyDataHolder);
     
-    NSLog(@"EMTG - token:\n%@\n\n", fed_ms_jwt);
+    NSLog(@"OIDCFED - token:\n%@\n\n", fed_ms_jwt);
 
     JWTCodingResultType *verifyResult = verifyBuilder.result;
     if (verifyResult.successResult) {
         // success
-        NSLog(@"\n%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        //NSLog(@"\n%@ success: %@", self.debugDescription, verifyResult.successResult.payload);
+        NSLog(@"\n%@ success", self.debugDescription);
         payload = verifyResult.successResult.encoded;
         return YES;
     }
@@ -472,25 +456,12 @@ static inline char itoh(int i) {
         NSLog(@"\n%@ error: %@", self.debugDescription, verifyResult.errorResult.error);
         return NO;
     }
-    
-    /*JWTBuilder *decodeBuilder = [JWTBuilder decodeMessage:fed_ms_jwt].secret(pemPublicKey).algorithmName(alg);
-     NSDictionary *envelopedPayload = decodeBuilder.decode;
-     
-     NSLog(@"EMTG - decoded payload: %@", envelopedPayload.debugDescription);
-     
-     if (envelopedPayload != nil) {
-     NSLog(@"EMTG - success");
-     return YES;
-     }
-     NSLog(@"EMTG - error verifying signature");
-     return NO;*/
-    
 }
 
 +(NSString *) getMetadataStatementWithJSONDocument:(NSDictionary *)jsonDoc fed_OP:(NSString *) fed_OP {
     NSMutableDictionary *ms = [jsonDoc objectForKey:@"metadata_statements"];
 
-    NSLog(@"EMTG - Decoding JWT of Federated Metadata Statement");
+    NSLog(@"OIDCFED - Decoding JWT of Federated Metadata Statement");
     if (ms != nil) {
         //NSDictionary  *ms_Dic = [self deserializationJSONObjectWithString:ms];
         NSString *ms_value = [ms objectForKey:fed_OP];
@@ -500,7 +471,7 @@ static inline char itoh(int i) {
     }
     
     NSMutableDictionary *ms_uris = [jsonDoc objectForKey:@"metadata_statement_uris"];
-    NSLog(@"EMTG - Decoding JWT of Federated Metadata Statement URIs");
+    NSLog(@"OIDCFED - Decoding JWT of Federated Metadata Statement URIs");
     if (ms_uris != nil) {
         NSString *ms_uri_value = [ms_uris objectForKey:fed_OP];
         if (ms_uri_value != nil) {
@@ -515,7 +486,7 @@ static inline char itoh(int i) {
                                        //json = [self getJWTPayloadStringWithJWTDocument:[[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding]];
                                        json = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
 
-                                       NSLog(@"EMTG - Async JSON: %@", json);
+                                       NSLog(@"OIDCFED - Async JSON: %@", json);
                                    }];
             return json;
         }
@@ -528,14 +499,14 @@ static inline char itoh(int i) {
     if (keyDict == nil)
         keyDict = [[NSMutableDictionary alloc] init];
 
-    //NSLog(@"EMTG - addKeysFromArrayToDic: debug array: \n%@", [keyArray debugDescription]);
+    //NSLog(@"OIDCFED - addKeysFromArrayToDic: debug array: \n%@", [keyArray debugDescription]);
 
     for (id item in keyArray) {
         NSDictionary * dic = item;
         [keyDict setObject:dic forKey:[dic valueForKey:@"kid"]];
     }
 
-    NSLog(@"EMTG - addKeysFromArrayToDic: \n%@", [keyDict debugDescription]);
+    NSLog(@"OIDCFED - addKeysFromArrayToDic: \n%@", [keyDict debugDescription]);
     return keyDict;
 }
 
@@ -550,12 +521,12 @@ static inline char itoh(int i) {
     NSDictionary *payload = [self deserializationJSONObjectWithString:payload_str];
 
     if (!payload) {
-        NSLog(@"EMTG - ERROR extracting Metadata Statemente's payload.");
+        NSLog(@"OIDCFED - ERROR extracting Metadata Statemente's payload.");
         return nil;
     }
 
     //NSLog(@"The payload is %@.", payload.debugDescription);
-    NSLog(@"EMTG - Inspecting MS signed by %@.", [payload objectForKey:@"iss"]);
+    NSLog(@"OIDCFED - Inspecting MS signed by %@.", [payload objectForKey:@"iss"]);
 
     /* Collect inner MS (JWT encoded) */
     NSString *inner_ms_jwt = [self getMetadataStatementWithJSONDocument:payload fed_OP:fed_op];
@@ -575,7 +546,7 @@ static inline char itoh(int i) {
             keys = [self addKeysFromArrayToDic:keys keyArray:[[inner_ms_flattened objectForKey:@"signing_keys"] objectForKey:@"keys"]];
             result = [self flattenWithUpper:payload lower:inner_ms_flattened];
         } else {
-            NSLog(@"EMTG - verifyMetadataStatementWithFed_ms_jwt: Error at the flattened process");
+            NSLog(@"OIDCFED - verifyMetadataStatementWithFed_ms_jwt: Error at the flattened process");
             result = nil;
         }
     }
@@ -590,21 +561,21 @@ static inline char itoh(int i) {
     
     /* if the flattened process is completed (successfully) verify the signature using the collected keys */
     if (result) {
-        NSLog(@"EMTG - Completed flattened process of fed_ms_st.");
+        NSLog(@"OIDCFED - Completed flattened process of fed_ms_st.");
     
         BOOL isVerified = [self verifySignatureWithFed_ms_jwt:fed_ms_jwt validKeys:keys];
         if (isVerified) {
-            NSLog(@"EMTG - Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
+            NSLog(@"OIDCFED - Successful validation of signature of %@ with KID.", [payload objectForKey:@"iss"]);
             return result;
         }
         else {
-            NSLog(@"EMTG - Invalid signature of Metadata Statement");
+            NSLog(@"OIDCFED - Invalid signature of Metadata Statement");
             return nil;
         }
     }
     
     else
-        NSLog(@"EMTG - ERROR in the Metadata Statement verification.");
+        NSLog(@"OIDCFED - ERROR in the Metadata Statement verification.");
         //TODO:with KID:" + signedJWT.getHeader().getKeyID());
     
     return result;
@@ -616,20 +587,20 @@ static inline char itoh(int i) {
     //NSDictionary *metadataStatement = [discoveryDoc objectForKey:@"metadata_statements"];
     //NSArray *fedetatedOPs = [metadataStatement allKeys];
     for (NSString* fed_op in rootKeys.allKeys) {
-        NSLog(@"EMTG - Looking for a valid metada_statement for %@", fed_op);
-        //NSLog(@"EMTG - Debuging received discovery document:\n%@", discoveryDoc);
+        NSLog(@"OIDCFED - Looking for a valid metada_statement for %@", fed_op);
+        //NSLog(@"OIDCFED - Debuging received discovery document:\n%@", discoveryDoc);
 
         // TODO: String ms_jwt = getMetadataStatement(unsigned_ms, fed_op);
 
         NSString *fed_ms_jwt = [self getMetadataStatementWithJSONDocument:[discoveryDoc mutableCopy] fed_OP:fed_op];
-        //NSLog(@"EMTG - getMetadataStatementWithJSONDocument: \n%@", fed_ms_jwt);
+        //NSLog(@"OIDCFED - getMetadataStatementWithJSONDocument: \n%@", fed_ms_jwt);
         
         if (fed_ms_jwt) {
 
             NSDictionary *ms_flattened = [self verifyMetadataStatementWithFed_ms_jwt:fed_ms_jwt
                                                                                fed_OP:fed_op
                                                                              rootKeys:rootKeys];
-            //NSLog(@"EMTG - Statement for federation id %@", fed_op);
+            //NSLog(@"OIDCFED - Statement for federation id %@", fed_op);
             //NSLog(@"%@", ms_flattened.debugDescription);
             return ms_flattened;
         }
@@ -654,13 +625,13 @@ static inline char itoh(int i) {
 
     if (signResult.successResult) {
       // success
-      NSLog(@"EMTG - %@ success: %@", self.debugDescription, signResult.successResult.encoded);
+      NSLog(@"OIDCFED - %@ success: %@", self.debugDescription, signResult.successResult.encoded);
       NSString *token = signResult.successResult.encoded;
       return token;
     }
     else {
       // error
-      NSLog(@"EMTG - %@ error: %@", self.debugDescription, signResult.errorResult.error);
+      NSLog(@"OIDCFED - %@ error: %@", self.debugDescription, signResult.errorResult.error);
       // reject(signResult.errorResult);
     }
   return nil;
@@ -684,7 +655,7 @@ static inline char itoh(int i) {
   //document.put("exp", new Date().getTime() + 60 * 15);
   // TODO change to 15 minutes
   NSNumber *expirationDate = [NSNumber numberWithDouble:([[NSDate date] timeIntervalSince1970] + (60 * 60 * 24))];
-  NSLog(@"EMTG - singDcoument - expirationDate = %d", expirationDate.unsignedIntValue);
+  NSLog(@"OIDCFED - singDcoument - expirationDate = %d", expirationDate.unsignedIntValue);
   [document setObject:[NSString stringWithFormat:@"%d",expirationDate.unsignedIntValue] forKey:@"exp"];
 
   NSString *signedDocument;
